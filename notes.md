@@ -20,7 +20,14 @@
 * [i2cdevlib](https://github.com/jrowberg/i2cdevlib)
   * [Code for reading the DMP](https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050_6Axis_MotionApps20.cpp#L118)
     * Apparently makes use of undocumented functionality!
+    * There are multiple versions of the
   * [examples/MPU6050-DMP6](https://github.com/jrowberg/i2cdevlib/tree/master/Arduino/MPU6050/examples/MPU6050_DMP6)
     * Computes orientation using the DMP feature
   * [examples/IMU_Zero](https://github.com/jrowberg/i2cdevlib/tree/master/Arduino/MPU6050/examples/IMU_Zero)
     * Calibrates the gyroscope and accelerometer offsets
+  * [Issues with PlatoformIO](https://community.platformio.org/t/i2cdev-incompatible-with-teensy-i2c-t3/11537/4)
+
+ ## Calibration
+ ```
+ [-1743,-1742] --> [-7,11]  [719,720] --> [-7,5]    [1101,1101] --> [16381,16386]   [100,101] --> [0,3]     [60,61] --> [0,4]       [1,1] --> [0,1]
+ ```
