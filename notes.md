@@ -10,6 +10,7 @@
   * So it becomes a 9-axis sensor
   * Somehow lets us extract the orientation from the accelerometer + gyro
   * Apparently [not publicly documented](https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050.h#L731)
+  * Seems to have some sort of internal gravity sensor. Does this mean that it has some reference for pitch/roll, but not for yaw?
 
 ## Articles
 * [Geek Mom Projects - DMP data from i2cdevlib](http://www.geekmomprojects.com/mpu-6050-dmp-data-from-i2cdevlib/)
@@ -30,4 +31,11 @@
  ## Calibration
  ```
  [-1743,-1742] --> [-7,11]  [719,720] --> [-7,5]    [1101,1101] --> [16381,16386]   [100,101] --> [0,3]     [60,61] --> [0,4]       [1,1] --> [0,1]
+
+ [-1743,-1742]
+ [719,720]
+ [1101,1101]
+ [100,101]
+ [60,61]
+ [1,1]
  ```
