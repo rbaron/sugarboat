@@ -1,0 +1,26 @@
+# MPU-6050
+* [Datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf)
+* [Register map](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)
+* It's a 6 degrees of freedom IMU
+  * Accelerometer with 3 axes => Reads
+  * Gyroscope with 3 axes
+* But also has a built-in "MotionFusion" Digital Motion Processor (DMP)
+  * "Offloads computation of motion processing algorithms" from the host processor (?)
+  * Generates "sensor fusion data" (?)
+  * So it becomes a 9-axis sensor
+  * Somehow lets us extract the orientation from the accelerometer + gyro
+  * Apparently [not publicly documented](https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050.h#L731)
+
+## Articles
+* [Geek Mom Projects - DMP data from i2cdevlib](http://www.geekmomprojects.com/mpu-6050-dmp-data-from-i2cdevlib/)
+* [The MPU6050 Explained](https://mjwhite8119.github.io/Robots/mpu6050)
+  * Awesome resource for calibrating and getting the orientation using the DMP feature. It uses the i2cdevlib linked below
+
+## Code
+* [i2cdevlib](https://github.com/jrowberg/i2cdevlib)
+  * [Code for reading the DMP](https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050_6Axis_MotionApps20.cpp#L118)
+    * Apparently makes use of undocumented functionality!
+  * [examples/MPU6050-DMP6](https://github.com/jrowberg/i2cdevlib/tree/master/Arduino/MPU6050/examples/MPU6050_DMP6)
+    * Computes orientation using the DMP feature
+  * [examples/IMU_Zero](https://github.com/jrowberg/i2cdevlib/tree/master/Arduino/MPU6050/examples/IMU_Zero)
+    * Calibrates the gyroscope and accelerometer offsets
