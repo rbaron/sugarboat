@@ -89,13 +89,13 @@ MPU6050 mpu;
 // uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
 // quaternion components in a [w, x, y, z] format (not best for parsing
 // on a remote host such as Processing or something though)
-//#define OUTPUT_READABLE_QUATERNION
+#define OUTPUT_READABLE_QUATERNION
 
 // uncomment "OUTPUT_READABLE_EULER" if you want to see Euler angles
 // (in degrees) calculated from the quaternions coming from the FIFO.
 // Note that Euler angles suffer from gimbal lock (for more info, see
 // http://en.wikipedia.org/wiki/Gimbal_lock)
-#define OUTPUT_READABLE_EULER
+// #define OUTPUT_READABLE_EULER
 
 // uncomment "OUTPUT_READABLE_YAWPITCHROLL" if you want to see the yaw/
 // pitch/roll angles (in degrees) calculated from the quaternions coming
@@ -290,14 +290,18 @@ void loop() {
 #ifdef OUTPUT_READABLE_QUATERNION
     // display quaternion values in easy matrix form: w x y z
     mpu.dmpGetQuaternion(&q, fifoBuffer);
-    Serial.print("quat\t");
-    Serial.print(q.w);
-    Serial.print("\t");
-    Serial.print(q.x);
-    Serial.print("\t");
-    Serial.print(q.y);
-    Serial.print("\t");
-    Serial.println(q.z);
+    VectorFloat z_rotated{0, 0, 1};
+    z_rotated.rotate(&q);
+    float angle = acos(z_rotated.z / z_rotated.getMagnitude());
+    // Serial.print("quat\t");
+    // Serial.print(q.w);
+    // Serial.print("\t");
+    // Serial.print(q.x);
+    // Serial.print("\t");
+    // Serial.print(q.y);
+    // Serial.print("\t");
+    // Serial.println(q.z);
+    Serial.println(180 * angle / M_PI);
 #endif
 
 #ifdef OUTPUT_READABLE_EULER
@@ -311,6 +315,16 @@ void loop() {
     Serial.print("\t");
     Serial.println(euler[2] * 180 / M_PI);
 
+    // float ax = euler[0];
+    // float ay = euler[2];
+    // float az = euler[1];
+    // float tilt = 0.0;
+    // if (!(ax == 0 && ay == 0 && az == 0)) {
+    //   tilt = acos(abs(az) / (sqrt(ax * ax + ay * ay + az * az))) * 180.0 /
+    //   M_PI;
+    // }
+    // Serial.printf("Tilt: %.2f\n", tilt);
+
 #endif
 
 #ifdef OUTPUT_READABLE_YAWPITCHROLL
@@ -318,11 +332,17 @@ void loop() {
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    Serial.print("ypr\t");
+    // Serial.print("ypr\t");
+    // Serial.print(ypr[0] * 180 / M_PI);
+    // Serial.print("\t");
+    // Serial.print(ypr[1] * 180 / M_PI);
+    // Serial.print("\t");
+    // Serial.print(ypr[2] * 180 / M_PI);
+    Serial.print("yaw:");
     Serial.print(ypr[0] * 180 / M_PI);
-    Serial.print("\t");
+    Serial.print("\tpitch:");
     Serial.print(ypr[1] * 180 / M_PI);
-    Serial.print("\t");
+    Serial.print("\troll:");
     Serial.print(ypr[2] * 180 / M_PI);
     /*
       mpu.dmpGetAccel(&aa, fifoBuffer);

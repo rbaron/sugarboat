@@ -11,6 +11,8 @@
   * Somehow lets us extract the orientation from the accelerometer + gyro
   * Apparently [not publicly documented](https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050.h#L731)
   * Seems to have some sort of internal gravity sensor. Does this mean that it has some reference for pitch/roll, but not for yaw?
+  * [This GitHub comment](https://github.com/jrowberg/i2cdevlib/issues/528#issuecomment-611634501) links to a PDF containing the specs of the firmware that powers the DMP
+  * [Clear explanation of the DMP](https://github.com/jrowberg/i2cdevlib/issues/190#issuecomment-144270345) by the author of i2cdevlib
 
 ## Articles
 * [Geek Mom Projects - DMP data from i2cdevlib](http://www.geekmomprojects.com/mpu-6050-dmp-data-from-i2cdevlib/)
@@ -27,6 +29,10 @@
   * [examples/IMU_Zero](https://github.com/jrowberg/i2cdevlib/tree/master/Arduino/MPU6050/examples/IMU_Zero)
     * Calibrates the gyroscope and accelerometer offsets
   * [Issues with PlatoformIO](https://community.platformio.org/t/i2cdev-incompatible-with-teensy-i2c-t3/11537/4)
+* [MPU6050_light](https://github.com/rfetick/MPU6050_light)
+  * A library for the MPU-6050 that estimates the angles in software (no DMP?)
+* [MPU605-tockn](https://github.com/tockn/MPU6050_tockn)
+  * Also calculates angles in software
 
  ## Calibration
  ```
@@ -39,3 +45,14 @@
  [60,61]
  [1,1]
  ```
+
+ ## How to calculate the tilt?
+ Tilt: the angle between the sensor and the original's frame Z axis (or equivalently the gravity)
+
+ The sensor gives us a quaternion.
+
+### Euler angles
+* [Converting quaternions to Euler angles](https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles)
+*
+
+### Row pitch yaw

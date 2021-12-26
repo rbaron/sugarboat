@@ -179,7 +179,8 @@
 //   Fastwire::setup(400, true);
 // #endif
 
-//   Serial.begin(9600);
+//   // Serial.begin(9600);
+//   Serial.begin(115200);
 
 //   // initialize device
 //   Serial.println("Initializing I2C devices...");
