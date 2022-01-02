@@ -1,0 +1,28 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#(c) SnapEDA 2016 (snapeda.com)
+#This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA) with Design Exception 1.0
+#
+# DW01A
+#
+DEF DW01A IC 0 40 Y Y 1 L N
+F0 "IC" -200 450 50 H V L BNN
+F1 "DW01A" -200 -500 50 H V L BNN
+F2 "SOT23-6" 0 0 50 H I L BNN
+F3 "" 0 0 50 H I L BNN
+F4 "DW01A" 0 0 50 H I L BNN "MPN"
+F5 "C351410" 0 0 50 H I L BNN "LCSC"
+F6 "DW01A" 0 0 50 H I L BNN "VALUE"
+DRAW
+T 0 -280 100 50 0 0 0 Lithium~Protection Normal 0 L B
+S -400 -400 400 400 0 0 10 f
+X VCC 5 -600 300 200 R 40 40 0 0 W 
+X GND 6 -600 -300 200 R 40 40 0 0 W 
+X TD 4 -600 0 200 R 40 40 0 0 B 
+X OD 1 600 -300 200 L 40 40 0 0 B 
+X OC 3 600 0 200 L 40 40 0 0 B 
+X CS 2 600 300 200 L 40 40 0 0 B 
+ENDDRAW
+ENDDEF
+#
+# End Library

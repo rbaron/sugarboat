@@ -1,0 +1,32 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#(c) SnapEDA 2016 (snapeda.com)
+#This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA) with Design Exception 1.0
+#
+# B5819W-TP
+#
+DEF B5819W-TP D 0 40 Y Y 1 L N
+F0 "D" -140 75 50 H V L BNN
+F1 "B5819W-TP" -140 -135 50 H V L BNN
+F2 "SOD3716X135N" 0 0 50 H I L BNN
+F3 "" 0 0 50 H I L BNN
+F4 "Micro Commercial Components" 0 0 50 H I L BNN "MANUFACTURER"
+DRAW
+P 2 0 0 10 -50 -50 50 0 N
+P 2 0 0 10 50 0 -50 50 N
+P 2 0 0 10 75 50 50 50 N
+P 2 0 0 10 50 50 50 0 N
+P 2 0 0 10 -50 50 -50 0 N
+P 2 0 0 10 -50 0 -50 -50 N
+P 2 0 0 10 50 0 50 -50 N
+P 2 0 0 10 75 50 75 40 N
+P 2 0 0 10 50 -50 25 -50 N
+P 2 0 0 10 25 -40 25 -50 N
+P 2 0 0 10 -200 0 -50 0 N
+P 2 0 0 10 50 0 200 0 N
+X A A -300 0 100 R 40 40 0 0 P 
+X C C 300 0 100 L 40 40 0 0 P 
+ENDDRAW
+ENDDEF
+#
+# End Library

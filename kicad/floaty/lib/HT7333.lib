@@ -1,0 +1,21 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#(c) SnapEDA 2016 (snapeda.com)
+#This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA) with Design Exception 1.0
+#
+# HT7333
+#
+DEF HT7333 U 0 40 Y Y 1 L N
+F0 "U" 0 0 50 H I L BNN
+F1 "HT7333" 0 0 50 H I L BNN
+F2 "SOT89" 0 0 50 H I L BNN
+F3 "" 0 0 50 H I L BNN
+DRAW
+S -400 -200 400 200 0 0 10 f
+X VIN VIN -600 0 200 R 40 40 0 0 B 
+X GND GND 0 -400 200 U 40 40 0 0 B 
+X VOUT VOUT 600 0 200 L 40 40 0 0 B 
+ENDDRAW
+ENDDEF
+#
+# End Library

@@ -1,0 +1,30 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#(c) SnapEDA 2016 (snapeda.com)
+#This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA) with Design Exception 1.0
+#
+# TP4056
+#
+DEF TP4056 U 0 40 Y Y 1 L N
+F0 "U" -400 520 50 H V L BNN
+F1 "TP4056" -400 -600 50 H V L BNN
+F2 "SOP127P600X175-9N" 0 0 50 H I L BNN
+F3 "" 0 0 50 H I L BNN
+F4 "NanJing Top Power ASIC Corp." 0 0 50 H I L BNN "MANUFACTURER"
+F5 "1.75mm" 0 0 50 H I L BNN "MAXIMUM_PACKAGE_HEIGHT"
+F6 "IPC 7351B" 0 0 50 H I L BNN "STANDARD"
+DRAW
+S -400 -500 400 500 0 0 10 f
+X TEMP 1 -600 200 200 R 40 40 0 0 I 
+X PROG 2 -600 -100 200 R 40 40 0 0 B 
+X GND 3 600 -400 200 L 40 40 0 0 W 
+X VCC 4 600 400 200 L 40 40 0 0 W 
+X BAT 5 600 200 200 L 40 40 0 0 O 
+X ~STDBY 6 600 100 200 L 40 40 0 0 O 
+X ~CHRG 7 600 0 200 L 40 40 0 0 O 
+X CE 8 -600 100 200 R 40 40 0 0 I 
+X EP 9 600 -200 200 L 40 40 0 0 P 
+ENDDRAW
+ENDDEF
+#
+# End Library
