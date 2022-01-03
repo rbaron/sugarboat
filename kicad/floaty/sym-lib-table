@@ -7,4 +7,5 @@
   (lib (name "HT7333")(type "Legacy")(uri "${KIPRJMOD}/lib/HT7333.lib")(options "")(descr ""))
   (lib (name "E73-2G4M08S1C")(type "Legacy")(uri "${KIPRJMOD}/lib/E73-2G4M08S1C.lib")(options "")(descr ""))
   (lib (name "TYPE-C-31-M-12")(type "Legacy")(uri "${KIPRJMOD}/lib/TYPE-C-31-M-12.lib")(options "")(descr ""))
+  (lib (name "NX3215SA-32.768K-STD-MUA-14")(type "Legacy")(uri "${KIPRJMOD}/lib/NX3215SA-32.768K-STD-MUA-14.lib")(options "")(descr ""))
 )
