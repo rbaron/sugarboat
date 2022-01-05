@@ -1,4 +1,5 @@
 Comment,Designator,Footprint,LCSC
+"Battery_Cell","BT1","lib:BAT_1042_modified",""
 "0.1u","C1,C10,C11","Capacitor_SMD:C_0402_1005Metric","C1525"
 "2.2n","C12","Capacitor_SMD:C_0402_1005Metric","C1531"
 "10u","C2,C3,C4,C5","Capacitor_SMD:C_0402_1005Metric","C15525"
@@ -18,6 +19,7 @@ Comment,Designator,Footprint,LCSC
 "10k","R6,R12,R13","Resistor_SMD:R_0402_1005Metric","C25744"
 "470k","R7,R8","Resistor_SMD:R_0402_1005Metric","C25790"
 "5.1k","R9,R10","Resistor_SMD:R_0402_1005Metric","C25905"
+"TestPoint","TP1,TP2,TP3,TP4,TP5","TestPoint:TestPoint_Pad_D1.5mm",""
 "TP4056","U1","SOP127P600X175-9N","C382139"
 "MPU-6050","U2","Sensor_Motion:InvenSense_QFN-24_4x4mm_P0.5mm","C24112"
 "HT7330","U3","lib:SOT89","C347190"

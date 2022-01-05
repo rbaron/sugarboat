@@ -10,9 +10,9 @@
   * So it becomes a 9-axis sensor
   * Somehow lets us extract the orientation from the accelerometer + gyro
   * Apparently [not publicly documented](https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050.h#L731)
-  * Seems to have some sort of internal gravity sensor. Does this mean that it has some reference for pitch/roll, but not for yaw?
   * [This GitHub comment](https://github.com/jrowberg/i2cdevlib/issues/528#issuecomment-611634501) links to a PDF containing the specs of the firmware that powers the DMP
-  * [Clear explanation of the DMP](https://github.com/jrowberg/i2cdevlib/issues/190#issuecomment-144270345) by the author of i2cdevlib
+  * [Clear explanation of the DMP](https://github.com/jrowberg/i2cdevlib/issues/190#issuecomment-144270345) by the author of i2cdevlibA
+  * [Motion determination patent](https://patents.google.com/patent/US20120323520A1/en)
 
 ## Articles
 * [Geek Mom Projects - DMP data from i2cdevlib](http://www.geekmomprojects.com/mpu-6050-dmp-data-from-i2cdevlib/)
