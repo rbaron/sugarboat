@@ -1,20 +1,30 @@
-#ifndef _FLOATY_MPU6050_H_
-#define _FLOATY_MPU6050_H_
+#ifndef _SUGARBOAT_MPU6050_H_
+#define _SUGARBOAT_MPU6050_H_
 
 #include "MPU6050_6Axis_MotionApps612.h"
 
 #define FLT_MPU_INTERRUPT_PIN 12
 
-namespace floaty {
+namespace sugarboat {
 
 class IMU {
  public:
+  struct Offsets {
+    int16_t accel_x;
+    int16_t accel_y;
+    int16_t accel_z;
+    int16_t gyro_x;
+    int16_t gyro_y;
+    int16_t gyro_z;
+  };
+
   IMU() {}
   IMU(const IMU &other) = delete;
   IMU &operator=(const IMU &other) = delete;
 
   int Init();
   int DeInit();
+  Offsets Calibrate();
   float GetTilt();
 
  private:
@@ -22,5 +32,5 @@ class IMU {
   uint8_t fifo_buffer_[64];
   Quaternion quaternion_;
 };
-}  // namespace floaty
-#endif  // _FLOATY_MPU6050_H_
+}  // namespace sugarboat
+#endif  // _SUGARBOAT_MPU6050_H_

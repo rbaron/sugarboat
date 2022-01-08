@@ -1,0 +1,14 @@
+{
+  "platformio-ide.reopen//SerialMonitorDelay": 10,
+  "files.associations": {
+    "atomic": "cpp",
+    "*.tcc": "cpp",
+    "fstream": "cpp",
+    "sstream": "cpp",
+    "exception": "cpp",
+    "iosfwd": "cpp",
+    "new": "cpp",
+    "ostream": "cpp",
+    "streambuf": "cpp"
+  }
+}
