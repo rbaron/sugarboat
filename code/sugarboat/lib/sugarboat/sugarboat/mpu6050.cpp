@@ -2,11 +2,12 @@
 
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps612.h"
+#include "sugarboat/config.h"
 
 namespace sugarboat {
 namespace {}  // namespace
 
-int IMU::Init() {
+int IMU::Init(const Offsets& offsets) {
   pinMode(FLT_MPU_INTERRUPT_PIN, INPUT);
   mpu_.initialize();
 
@@ -23,18 +24,24 @@ int IMU::Init() {
   }
 
   mpu_.setDMPEnabled(true);
-  mpu_.setXAccelOffset(0);
-  mpu_.setYAccelOffset(0);
-  mpu_.setZAccelOffset(0);
-  mpu_.setXGyroOffset(0);
-  mpu_.setYGyroOffset(0);
-  mpu_.setZGyroOffset(0);
+  // mpu_.setXAccelOffset(0);
+  // mpu_.setYAccelOffset(0);
+  // mpu_.setZAccelOffset(0);
+  // mpu_.setXGyroOffset(0);
+  // mpu_.setYGyroOffset(0);
+  // mpu_.setZGyroOffset(0);
   // mpu_.setXAccelOffset(-1743);
   // mpu_.setYAccelOffset(719);
   // mpu_.setZAccelOffset(1101);
   // mpu_.setXGyroOffset(100);
   // mpu_.setYGyroOffset(60);
   // mpu_.setZGyroOffset(1);
+  mpu_.setXAccelOffset(offsets.accel_x);
+  mpu_.setYAccelOffset(offsets.accel_y);
+  mpu_.setZAccelOffset(offsets.accel_z);
+  mpu_.setXGyroOffset(offsets.gyro_x);
+  mpu_.setYGyroOffset(offsets.gyro_y);
+  mpu_.setZGyroOffset(offsets.gyro_z);
 
   Serial.printf("[imu] Initialized!\n");
   return 0;
@@ -45,6 +52,13 @@ int IMU::DeInit() {
 }
 
 IMU::Offsets IMU::Calibrate() {
+  // mpu_.setXAccelOffset(0);
+  // mpu_.setYAccelOffset(0);
+  // mpu_.setZAccelOffset(0);
+  // mpu_.setXGyroOffset(0);
+  // mpu_.setYGyroOffset(0);
+  // mpu_.setZGyroOffset(0);
+
   // mpu_.CalibrateAccel(1);
   // mpu_.CalibrateGyro(1);
   // mpu_.PrintActiveOffsets();

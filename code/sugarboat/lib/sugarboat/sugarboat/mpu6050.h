@@ -22,7 +22,7 @@ class IMU {
   IMU(const IMU &other) = delete;
   IMU &operator=(const IMU &other) = delete;
 
-  int Init();
+  int Init(const Offsets &offsets);
   int DeInit();
   Offsets Calibrate();
   float GetTilt();

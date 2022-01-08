@@ -3,11 +3,15 @@
 #include <bluefruit.h>
 
 #include "Wire.h"
+#include "sugarboat/ble.h"
 #include "sugarboat/config.h"
+#include "sugarboat/logger.h"
 #include "sugarboat/mpu6050.h"
 
-sugarboat::IMU imu;
+sugarboat::BLE ble;
 sugarboat::Config config;
+sugarboat::Logger logger(Serial, ble);
+sugarboat::IMU imu;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -20,31 +24,29 @@ void setup() {
     ;
   delay(1000);
 
-  Serial.println("ok!\n");
   config = sugarboat::Config::ReadFromFlash();
   const sugarboat::IMU::Offsets &offsets = config.GetIMUOffsets();
-  Serial.printf("Initial offsets: %d %d %d %d %d %d\n", offsets.accel_x,
-                offsets.accel_y, offsets.accel_z, offsets.gyro_x,
-                offsets.gyro_y, offsets.gyro_z);
+  logger.printf("[main] IMU offsets from flash: %d %d %d %d %d %d\n",
+                offsets.accel_x, offsets.accel_y, offsets.accel_z,
+                offsets.gyro_x, offsets.gyro_y, offsets.gyro_z);
 
-  sugarboat::IMU::Offsets imu_offsets = imu.Calibrate();
-  config.SetIMUOffsets(imu_offsets);
-  config.CommitToFlash();
+  if (imu.Init(config.GetIMUOffsets())) {
+    logger.printf("[main] Error initializing imu");
+    while (true)
+      ;
+  }
 
-  // if (imu.Init()) {
-  //   Serial.printf("[main] Error initializing imu");
-  //   while (true)
-  //     ;
-  // }
-
-  // const sugarboat::IMU::Offsets &offsets2 = config.GetIMUOffsets();
-  // Serial.printf("Done. Offsets: %d %d %d %d %d %d\n", offsets2.accel_x,
-  //               offsets2.accel_y, offsets2.accel_z, offsets2.gyro_x,
-  //               offsets2.gyro_y, offsets2.gyro_z);
+  if (!ble.Init()) {
+    logger.println("[main] Error intializing BLE");
+    while (true)
+      ;
+  }
+  ble.StartAdv();
 }
 
+int n = 0;
 void loop() {
-  // float angle = imu.GetTilt();
-  // Serial.printf("Got angle: %.2f\n", angle);
-  delay(100);
+  float angle = imu.GetTilt();
+  logger.printf("Angle: %.2f\n", angle);
+  delay(1000);
 }
