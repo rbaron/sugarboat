@@ -4,9 +4,17 @@
 #include <bluefruit.h>
 
 namespace sugarboat {
+namespace {
+constexpr char kConfigServiceUUID[] = "e94989ee-7b22-4b34-b71d-a33459aea9ae";
+constexpr char kConfigCharacteristicUUID[] =
+    "e65785ce-955b-42aa-95a2-b7d96806d3da";
+}  // namespace
+
 class BLE {
  public:
-  BLE() {}
+  BLE()
+      : cfg_service_(kConfigServiceUUID),
+        cfg_char_(kConfigCharacteristicUUID) {}
 
   // Disable copying.
   BLE(const BLE&) = delete;
@@ -26,6 +34,8 @@ class BLE {
 
  private:
   BLEUart bleuart_;
+  BLEService cfg_service_;
+  BLECharacteristic cfg_char_;
 };
 
 }  // namespace sugarboat

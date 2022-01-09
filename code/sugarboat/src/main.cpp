@@ -47,6 +47,6 @@ void setup() {
 int n = 0;
 void loop() {
   float angle = imu.GetTilt();
-  logger.printf("Angle: %.2f\n", angle);
+  // logger.printf("Angle: %.2f\n", angle);
   delay(1000);
 }
