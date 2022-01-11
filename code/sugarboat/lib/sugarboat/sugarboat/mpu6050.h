@@ -18,6 +18,17 @@ class IMU {
     int16_t gyro_z;
   };
 
+  struct IMUQuaternion {
+    float w;
+    float x;
+    float y;
+    float z;
+  };
+
+  struct Orientation {
+    IMUQuaternion quaternion;
+  };
+
   IMU() {}
   IMU(const IMU &other) = delete;
   IMU &operator=(const IMU &other) = delete;
@@ -26,6 +37,7 @@ class IMU {
   int DeInit();
   Offsets Calibrate();
   float GetTilt();
+  Orientation GetOrientation();
 
  private:
   MPU6050 mpu_;

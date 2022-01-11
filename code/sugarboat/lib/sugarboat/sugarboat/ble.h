@@ -3,8 +3,18 @@
 
 #include <bluefruit.h>
 
+#include "sugarboat/config.h"
+#include "sugarboat/mpu6050.h"
+#include "sugarboat/sensor_data.h"
+
 namespace sugarboat {
 namespace {
+
+constexpr char kSensorServiceUUID[] = "9b7d5c6f-a8ca-4080-9290-d4afb5ac64a3";
+constexpr char kSensorCharacteristicUUID[] =
+    "527d0f9b-db66-48c5-9089-071e1a795b6f";
+constexpr char kOrientationCharacteristicUUID[] =
+    "caf0797d-71d3-4ae5-b2a6-67c18f70afa6";
 constexpr char kConfigServiceUUID[] = "e94989ee-7b22-4b34-b71d-a33459aea9ae";
 constexpr char kConfigCharacteristicUUID[] =
     "e65785ce-955b-42aa-95a2-b7d96806d3da";
@@ -12,15 +22,16 @@ constexpr char kConfigCharacteristicUUID[] =
 
 class BLE {
  public:
-  BLE()
-      : cfg_service_(kConfigServiceUUID),
-        cfg_char_(kConfigCharacteristicUUID) {}
+  static BLE& GetInstance() {
+    static BLE ble;
+    return ble;
+  }
 
   // Disable copying.
   BLE(const BLE&) = delete;
   BLE& operator=(const BLE&) = delete;
 
-  bool Init();
+  bool Init(Config& config);
   bool StartAdv();
 
   bool IsConnected() {
@@ -32,10 +43,33 @@ class BLE {
     return bleuart_;
   }
 
+  bool InjectSensorData(const SensorData& sensor_data);
+
+  bool InjectOrientationData(const IMU::Orientation& orientation);
+
  private:
+  BLE()
+      : cfg_service_(kConfigServiceUUID),
+        cfg_char_(kConfigCharacteristicUUID),
+        sensor_service_(kSensorServiceUUID),
+        sensor_char_(kSensorCharacteristicUUID),
+        orientation_char_(kOrientationCharacteristicUUID) {}
+
+  static void CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
+                                   uint8_t* data, uint16_t len);
+
+  static void ConnCallback(uint16_t conn_handle);
+
+  static void DisconnCallback(uint16_t conn_handle, uint8_t reason);
+
+  int n_conns_ = 0;
+  Config* config_ = nullptr;
   BLEUart bleuart_;
   BLEService cfg_service_;
   BLECharacteristic cfg_char_;
+  BLEService sensor_service_;
+  BLECharacteristic sensor_char_;
+  BLECharacteristic orientation_char_;
 };
 
 }  // namespace sugarboat

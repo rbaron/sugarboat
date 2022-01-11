@@ -8,8 +8,9 @@
 #include "sugarboat/logger.h"
 #include "sugarboat/mpu6050.h"
 
-sugarboat::BLE ble;
+// sugarboat::BLE ble;
 sugarboat::Config config;
+sugarboat::BLE &ble = sugarboat::BLE::GetInstance();
 sugarboat::Logger logger(Serial, ble);
 sugarboat::IMU imu;
 
@@ -20,8 +21,8 @@ void setup() {
   Wire.setClock(400000);
 
   Serial.begin(115200);
-  while (!Serial)
-    ;
+  // while (!Serial)
+  //   ;
   delay(1000);
 
   config = sugarboat::Config::ReadFromFlash();
@@ -36,7 +37,8 @@ void setup() {
       ;
   }
 
-  if (!ble.Init()) {
+  sugarboat::BLE &ble = sugarboat::BLE::GetInstance();
+  if (!ble.Init(config)) {
     logger.println("[main] Error intializing BLE");
     while (true)
       ;
@@ -46,7 +48,9 @@ void setup() {
 
 int n = 0;
 void loop() {
-  float angle = imu.GetTilt();
+  // float angle = imu.GetTilt();
   // logger.printf("Angle: %.2f\n", angle);
+  sugarboat::IMU::Orientation orientation = imu.GetOrientation();
+  ble.InjectOrientationData(orientation);
   delay(1000);
 }

@@ -105,4 +105,23 @@ float IMU::GetTilt() {
   return 90.0f - 180.0f * angle / PI;
 }
 
+IMU::Orientation IMU::GetOrientation() {
+  while (!mpu_.getFIFOCount())
+    ;
+
+  Orientation orientation;
+
+  if (!mpu_.dmpGetCurrentFIFOPacket(fifo_buffer_)) {
+    Serial.println("[imu] Unable to get packet from fifo buffer");
+    return orientation;
+  }
+
+  mpu_.dmpGetQuaternion(&quaternion_, fifo_buffer_);
+  orientation.quaternion.w = quaternion_.w;
+  orientation.quaternion.x = quaternion_.x;
+  orientation.quaternion.y = quaternion_.y;
+  orientation.quaternion.z = quaternion_.z;
+  return orientation;
+}
+
 }  // namespace sugarboat
