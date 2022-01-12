@@ -348,7 +348,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "floaty.kicad_pro",
+    "filename": "sugarboat.kicad_pro",
     "version": 1
   },
   "net_settings": {
@@ -379,11 +379,11 @@
   "pcbnew": {
     "last_paths": {
       "gencad": "",
-      "idf": "",
+      "idf": "../../../../../Desktop/sugarboat.emn",
       "netlist": "",
       "specctra_dsn": "",
       "step": "../../../../../Desktop/floaty.step",
-      "vrml": ""
+      "vrml": "../../../../../Desktop/sugarboat.wrl"
     },
     "page_layout_descr_file": ""
   },

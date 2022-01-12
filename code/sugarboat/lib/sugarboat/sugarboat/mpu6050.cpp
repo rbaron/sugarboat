@@ -24,6 +24,7 @@ int IMU::Init(const Offsets& offsets) {
   }
 
   mpu_.setDMPEnabled(true);
+
   // mpu_.setXAccelOffset(0);
   // mpu_.setYAccelOffset(0);
   // mpu_.setZAccelOffset(0);
@@ -36,12 +37,13 @@ int IMU::Init(const Offsets& offsets) {
   // mpu_.setXGyroOffset(100);
   // mpu_.setYGyroOffset(60);
   // mpu_.setZGyroOffset(1);
-  mpu_.setXAccelOffset(offsets.accel_x);
-  mpu_.setYAccelOffset(offsets.accel_y);
-  mpu_.setZAccelOffset(offsets.accel_z);
-  mpu_.setXGyroOffset(offsets.gyro_x);
-  mpu_.setYGyroOffset(offsets.gyro_y);
-  mpu_.setZGyroOffset(offsets.gyro_z);
+
+  // mpu_.setXAccelOffset(offsets.accel_x);
+  // mpu_.setYAccelOffset(offsets.accel_y);
+  // mpu_.setZAccelOffset(offsets.accel_z);
+  // mpu_.setXGyroOffset(offsets.gyro_x);
+  // mpu_.setYGyroOffset(offsets.gyro_y);
+  // mpu_.setZGyroOffset(offsets.gyro_z);
 
   Serial.printf("[imu] Initialized!\n");
   return 0;
@@ -59,25 +61,25 @@ IMU::Offsets IMU::Calibrate() {
   // mpu_.setYGyroOffset(0);
   // mpu_.setZGyroOffset(0);
 
-  // mpu_.CalibrateAccel(1);
-  // mpu_.CalibrateGyro(1);
-  // mpu_.PrintActiveOffsets();
+  mpu_.CalibrateAccel(6);
+  mpu_.CalibrateGyro(6);
+  mpu_.PrintActiveOffsets();
 
   IMU::Offsets offsets;
 
-  offsets.accel_x = (-1743);
-  offsets.accel_y = (719);
-  offsets.accel_z = (1101);
-  offsets.gyro_x = (100);
-  offsets.gyro_y = (60);
-  offsets.gyro_z = (1);
+  // offsets.accel_x = (-1743);
+  // offsets.accel_y = (719);
+  // offsets.accel_z = (1101);
+  // offsets.gyro_x = (100);
+  // offsets.gyro_y = (60);
+  // offsets.gyro_z = (1);
 
-  // offsets.accel_x = mpu_.getXAccelOffset();
-  // offsets.accel_y = mpu_.getYAccelOffset();
-  // offsets.accel_z = mpu_.getZAccelOffset();
-  // offsets.gyro_x = mpu_.getXGyroOffset();
-  // offsets.gyro_y = mpu_.getYGyroOffset();
-  // offsets.gyro_z = mpu_.getZGyroOffset();
+  offsets.accel_x = mpu_.getXAccelOffset();
+  offsets.accel_y = mpu_.getYAccelOffset();
+  offsets.accel_z = mpu_.getZAccelOffset();
+  offsets.gyro_x = mpu_.getXGyroOffset();
+  offsets.gyro_y = mpu_.getYGyroOffset();
+  offsets.gyro_z = mpu_.getZGyroOffset();
   return offsets;
 }
 

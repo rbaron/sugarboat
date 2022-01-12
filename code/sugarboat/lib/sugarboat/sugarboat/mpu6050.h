@@ -3,7 +3,8 @@
 
 #include "MPU6050_6Axis_MotionApps612.h"
 
-#define FLT_MPU_INTERRUPT_PIN 12
+// #define FLT_MPU_INTERRUPT_PIN 12
+#define FLT_MPU_INTERRUPT_PIN 4
 
 namespace sugarboat {
 
