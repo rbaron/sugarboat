@@ -7,31 +7,6 @@ namespace {
 constexpr int kMaxConnections = 2;
 constexpr int kSensorCharProtocolVersion = 0;
 
-bool EncodeSensorData(SensorData& sensor_data, uint8_t* buf, size_t bufsize) {
-  if (bufsize < 8) {
-    return false;
-  }
-
-  // Byte 0
-  //   Bits 0-3: Protocol version.
-  buf[0] = kSensorCharProtocolVersion & 0x7;
-  // Byte 1 is reversed for future use.
-  buf[1] = 0x00;
-
-  // Bytes 2 - 3: angle in milli radians.
-  buf[2] = sensor_data.angle_mrad >> 8;
-  buf[3] = sensor_data.angle_mrad & 0xff;
-
-  // Bytes 4 - 5: temp in millidegrees Celcius.
-  buf[4] = sensor_data.temp_mcelcius >> 8;
-  buf[5] = sensor_data.temp_mcelcius & 0xff;
-
-  // Bytes 6 - 7: relative humidity in range [0, UINT16_MAX].
-  buf[6] = sensor_data.humi >> 8;
-  buf[7] = sensor_data.humi & 0xff;
-
-  return true;
-}
 }  // namespace
 
 bool BLE::Init(Config& config) {
@@ -109,8 +84,15 @@ bool BLE::StartAdv() {
   return true;
 }
 
+template <typename Type>
+inline static void Encode16BitFloat(float val, uint8_t* buf, size_t idx,
+                                    int scale) {
+  Type value = scale * val;
+  memcpy(buf + idx, &value, 2);
+}
+
 bool BLE::InjectSensorData(const SensorData& sensor_data) {
-  uint8_t buf[8];
+  uint8_t buf[13];
 
   // Byte 0
   //   Bits 0-3: Protocol version.
@@ -119,20 +101,24 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
   buf[1] = 0x00;
 
   // Bytes 2 - 3: angle in milli radians.
-  buf[2] = sensor_data.angle_mrad >> 8;
-  buf[3] = sensor_data.angle_mrad & 0xff;
+  // int16_t angle = sensor_data.tilt_degrees * 10;
+  // buf[2] = sensor_data.angle_mrad >> 8;
+  // buf[3] = sensor_data.angle_mrad & 0xff;
+  // Bytes 2 - 3: angle in degrees * 10.
+  Encode16BitFloat<int16_t>(sensor_data.tilt_degrees, buf, 2, 10);
 
   // Bytes 4 - 5: specific gravity ("SG" scale).
 
   // Bytes 5 - 6: grams of sugar in 100 grams of solution (Brix scale).
 
-  // Bytes 4 - 5: temp in millidegrees Celcius.
-  buf[4] = sensor_data.temp_mcelcius >> 8;
-  buf[5] = sensor_data.temp_mcelcius & 0xff;
+  // Bytes 7 - 8: temp in Celcius * 100.
+  Encode16BitFloat<int16_t>(sensor_data.temp_celcius, buf, 7, 100);
 
-  // Bytes 6 - 7: relative humidity in range [0, UINT16_MAX].
-  buf[6] = sensor_data.humi >> 8;
-  buf[7] = sensor_data.humi & 0xff;
+  // Bytes 9 - 10: relative humidity in range [0, UINT16_MAX].
+  Encode16BitFloat<uint16_t>(sensor_data.rel_humi / 100, buf, 9, UINT16_MAX);
+
+  // Bytes 11 - 12: batt voltage * 1000.
+  Encode16BitFloat<uint16_t>(sensor_data.batt_volt, buf, 11, 1000);
 
   uint16_t written_len = sensor_char_.write(buf, sizeof(buf));
   if (written_len < sizeof(buf)) {
@@ -148,19 +134,15 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
       sensor_char_.notify(buf, sizeof(buf));
     }
   }
-}
-
-inline static void Encode16BitFloat(float val, uint8_t* buf, size_t idx) {
-  int16_t value = 1000 * val;
-  memcpy(buf + idx, &value, 2);
+  return true;
 }
 
 bool BLE::InjectOrientationData(const IMU::Orientation& orientation) {
   uint8_t buf[8];
-  Encode16BitFloat(orientation.quaternion.w, buf, 0);
-  Encode16BitFloat(orientation.quaternion.x, buf, 2);
-  Encode16BitFloat(orientation.quaternion.y, buf, 4);
-  Encode16BitFloat(orientation.quaternion.z, buf, 6);
+  Encode16BitFloat<int16_t>(orientation.quaternion.w, buf, 0, 1000);
+  Encode16BitFloat<int16_t>(orientation.quaternion.x, buf, 2, 1000);
+  Encode16BitFloat<int16_t>(orientation.quaternion.y, buf, 4, 1000);
+  Encode16BitFloat<int16_t>(orientation.quaternion.z, buf, 6, 1000);
 
   uint16_t written_len = orientation_char_.write(buf, sizeof(buf));
   if (written_len < sizeof(buf)) {
@@ -176,6 +158,7 @@ bool BLE::InjectOrientationData(const IMU::Orientation& orientation) {
       orientation_char_.notify(buf, sizeof(buf));
     }
   }
+  return true;
 }
 
 void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,

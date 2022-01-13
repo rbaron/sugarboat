@@ -1,11 +1,14 @@
 
 #include <Adafruit_LittleFS.h>
+// #include <Adafruit_SHT31.h>
 #include <Adafruit_TinyUSB.h>
 #include <Arduino.h>
 #include <bluefruit.h>
 
 #include "sugarboat/ble.h"
 #include "sugarboat/config.h"
+#include "sugarboat/sensor_data.h"
+#include "sugarboat/sht30.h"
 // #include "sugarboat/logger.h"
 #include "Wire.h"
 #include "sugarboat/mpu6050.h"
@@ -14,22 +17,32 @@ sugarboat::Config config;
 sugarboat::BLE &ble = sugarboat::BLE::GetInstance();
 // sugarboat::Logger logger(Serial, ble);
 sugarboat::IMU imu;
+sugarboat::SHT30 sht30;
+
+Adafruit_SHT31 sht31 = Adafruit_SHT31();
+
 #define LED_BUILTIN2 16
 #define SGRBT_SDA_PIN 6
 #define SGRBT_SCL_PIN 10
+#define SGRBT_BAT_SEN_PIN 18
 
 void setup() {
   pinMode(LED_BUILTIN2, OUTPUT);
+  pinMode(SGRBT_BAT_SEN_PIN, INPUT);
 
   Wire.setPins(SGRBT_SDA_PIN, SGRBT_SCL_PIN);
   Wire.begin();
   Wire.setClock(400000);
 
   Serial.begin(115200);
-  while (!Serial)
-    ;
+  // while (!Serial)
+  //   ;
   delay(1000);
-  Serial.println("Hello, world2");
+
+  if (!sht30.Init()) {
+    Serial.println("[main] Error initializing SHT30");
+    while (1) delay(1);
+  }
 
   config = sugarboat::Config::ReadFromFlash();
 
@@ -44,16 +57,16 @@ void setup() {
       ;
   }
 
-  Serial.printf("[main] Will calibrate:\n");
-  offsets = imu.Calibrate();
-  Serial.printf("[main] IMU offsets from calibration: %d %d %d %d %d %d\n",
-                offsets.accel_x, offsets.accel_y, offsets.accel_z,
-                offsets.gyro_x, offsets.gyro_y, offsets.gyro_z);
+  // Serial.printf("[main] Will calibrate:\n");
+  // offsets = imu.Calibrate();
+  // Serial.printf("[main] IMU offsets from calibration: %d %d %d %d %d %d\n",
+  //               offsets.accel_x, offsets.accel_y, offsets.accel_z,
+  //               offsets.gyro_x, offsets.gyro_y, offsets.gyro_z);
 
-  config.SetIMUOffsets(offsets);
-  if (!config.CommitToFlash()) {
-    Serial.printf("[main] Error commiting config to flash\n");
-  }
+  // config.SetIMUOffsets(offsets);
+  // if (!config.CommitToFlash()) {
+  //   Serial.printf("[main] Error commiting config to flash\n");
+  // }
 
   sugarboat::BLE &ble = sugarboat::BLE::GetInstance();
   if (!ble.Init(config)) {
@@ -64,15 +77,37 @@ void setup() {
   ble.StartAdv();
 }
 
+sugarboat::SensorData sensor_data{0, 0, 0, 0};
 void loop() {
-  float angle = imu.GetTilt();
-  Serial.printf("Angle: %.2f\n", angle);
+  // float angle = imu.GetTilt();
+  // Serial.printf("Angle: %.2f\n", angle);
   sugarboat::IMU::Orientation orientation = imu.GetOrientation();
   ble.InjectOrientationData(orientation);
   // logger.printf("w: %.2f x: %.2f y: %.2f z:%.2f\n",
   // orientation.quaternion.w,
   // //               orientation.quaternion.x, orientation.quaternion.y,
   // //               orientation.quaternion.z);
+
+  float batt_v = 2 * 3.6f * analogRead(SGRBT_BAT_SEN_PIN) / 1024.0f;
+
+  sensor_data.batt_volt = batt_v;
+  sensor_data.rel_humi = sht30.GetHumi();
+  sensor_data.temp_celcius = sht30.GetTemp();
+  delay(50);
+  sensor_data.tilt_degrees = imu.GetTilt();
+
+  if (isnan(sensor_data.rel_humi)) {
+    sensor_data.rel_humi = 0;
+  }
+  if (isnan(sensor_data.temp_celcius)) {
+    sensor_data.temp_celcius = 0;
+  }
+
+  ble.InjectSensorData(sensor_data);
+
+  Serial.printf("Angle: %.2f Temp: %.2f, Humi: %.2f Batt: %.2f\n",
+                sensor_data.tilt_degrees, sensor_data.temp_celcius,
+                sensor_data.rel_humi, sensor_data.batt_volt);
   digitalToggle(LED_BUILTIN2);
   delay(250);
 }
