@@ -128,9 +128,12 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
   // Bytes 2 - 3: angle in degrees * 10.
   Encode16BitFloat<int16_t>(sensor_data.tilt_degrees, buf, 2, 10);
 
-  // Bytes 4 - 5: specific gravity ("SG" scale).
+  // Bytes 4 - 5: grams of sugar in 100 grams of solution (Brix scale).
+  float brix = CalculateBrix(config_->GetCoeffs(), sensor_data.tilt_degrees);
+  Encode16BitFloat<uint16_t>(brix, buf, 4, 1000);
 
-  // Bytes 5 - 6: grams of sugar in 100 grams of solution (Brix scale).
+  // Bytes 6 - 7: specific gravity ("SG" scale).
+  Encode16BitFloat<uint16_t>(BrixToSG(brix), buf, 6, 1000);
 
   // Bytes 7 - 8: temp in Celcius * 100.
   Encode16BitFloat<int16_t>(sensor_data.temp_celcius, buf, 7, 100);

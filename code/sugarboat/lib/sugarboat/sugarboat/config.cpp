@@ -35,10 +35,10 @@ size_t Config::Serialize(uint8_t *buf, size_t buf_size) const {
   memcpy(buf + offset, &coeffs_, sizeof(coeffs_));
   offset += sizeof(coeffs_);
 
-  for (int x = 0; x < kBuffSize; x++) {
-    Serial.printf("%02x ", buf[x]);
-  }
-  Serial.println();
+  // for (int x = 0; x < kBuffSize; x++) {
+  //   Serial.printf("%02x ", buf[x]);
+  // }
+  // Serial.println();
 
   return offset;
 }

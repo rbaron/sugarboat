@@ -10,9 +10,9 @@ struct Coeffs {
   float a0;
 };
 
-float CalculateSG(const Coeffs& coeffs, float tilt_angle);
+float CalculateBrix(const Coeffs& coeffs, float tilt_angle);
 
-// float BrixToSG(float brix);
+float BrixToSG(float brix);
 
 }  // namespace sugarboat
 #endif  // _SUGARBOAT_SUGAR_SCALE_H_
