@@ -54,15 +54,15 @@ int IMU::DeInit() {
 }
 
 IMU::Offsets IMU::Calibrate() {
-  // mpu_.setXAccelOffset(0);
-  // mpu_.setYAccelOffset(0);
-  // mpu_.setZAccelOffset(0);
-  // mpu_.setXGyroOffset(0);
-  // mpu_.setYGyroOffset(0);
-  // mpu_.setZGyroOffset(0);
+  mpu_.setXAccelOffset(0);
+  mpu_.setYAccelOffset(0);
+  mpu_.setZAccelOffset(0);
+  mpu_.setXGyroOffset(0);
+  mpu_.setYGyroOffset(0);
+  mpu_.setZGyroOffset(0);
 
-  mpu_.CalibrateAccel(6);
-  mpu_.CalibrateGyro(6);
+  mpu_.CalibrateAccel(10);
+  mpu_.CalibrateGyro(10);
   mpu_.PrintActiveOffsets();
 
   IMU::Offsets offsets;
@@ -123,6 +123,12 @@ IMU::Orientation IMU::GetOrientation() {
   orientation.quaternion.x = quaternion_.x;
   orientation.quaternion.y = quaternion_.y;
   orientation.quaternion.z = quaternion_.z;
+
+  mpu_.dmpGetEuler((float*)&orientation.euler_angles, &quaternion_);
+  orientation.euler_angles.psi *= 180.0f / PI;
+  orientation.euler_angles.theta *= 180.0f / PI;
+  orientation.euler_angles.phi *= 180.0f / PI;
+
   return orientation;
 }
 

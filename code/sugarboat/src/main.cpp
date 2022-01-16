@@ -69,7 +69,7 @@ void setup() {
   // }
 
   sugarboat::BLE &ble = sugarboat::BLE::GetInstance();
-  if (!ble.Init(config)) {
+  if (!ble.Init(config, imu)) {
     Serial.println("[main] Error intializing BLE");
     while (true)
       ;
@@ -105,9 +105,9 @@ void loop() {
 
   ble.InjectSensorData(sensor_data);
 
-  Serial.printf("Angle: %.2f Temp: %.2f, Humi: %.2f Batt: %.2f\n",
-                sensor_data.tilt_degrees, sensor_data.temp_celcius,
-                sensor_data.rel_humi, sensor_data.batt_volt);
+  // Serial.printf("Angle: %.2f Temp: %.2f, Humi: %.2f Batt: %.2f\n",
+  //               sensor_data.tilt_degrees, sensor_data.temp_celcius,
+  //               sensor_data.rel_humi, sensor_data.batt_volt);
   digitalToggle(LED_BUILTIN2);
-  delay(250);
+  delay(100);
 }

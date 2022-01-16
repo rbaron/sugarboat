@@ -11,12 +11,12 @@ namespace sugarboat {
 class IMU {
  public:
   struct Offsets {
-    int16_t accel_x;
-    int16_t accel_y;
-    int16_t accel_z;
-    int16_t gyro_x;
-    int16_t gyro_y;
-    int16_t gyro_z;
+    int16_t accel_x = 0;
+    int16_t accel_y = 0;
+    int16_t accel_z = 0;
+    int16_t gyro_x = 0;
+    int16_t gyro_y = 0;
+    int16_t gyro_z = 0;
   };
 
   struct IMUQuaternion {
@@ -26,8 +26,15 @@ class IMU {
     float z;
   };
 
+  struct EulerAngles {
+    float psi;
+    float theta;
+    float phi;
+  };
+
   struct Orientation {
     IMUQuaternion quaternion;
+    EulerAngles euler_angles;
   };
 
   IMU() {}

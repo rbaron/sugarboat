@@ -31,7 +31,7 @@ class BLE {
   BLE(const BLE&) = delete;
   BLE& operator=(const BLE&) = delete;
 
-  bool Init(Config& config);
+  bool Init(Config& config, IMU& imu);
   bool StartAdv();
 
   bool IsConnected() {
@@ -63,6 +63,7 @@ class BLE {
   static void DisconnCallback(uint16_t conn_handle, uint8_t reason);
 
   int n_conns_ = 0;
+  IMU* imu_ = nullptr;
   Config* config_ = nullptr;
   BLEUart bleuart_;
   BLEService cfg_service_;

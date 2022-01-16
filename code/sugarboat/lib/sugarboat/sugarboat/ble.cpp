@@ -7,10 +7,32 @@ namespace {
 constexpr int kMaxConnections = 2;
 constexpr int kSensorCharProtocolVersion = 0;
 
+bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
+  uint8_t buf[kBuffSize] = {0x00};
+  size_t bytes_written = cfg.Serialize(buf, sizeof(buf));
+  if (bytes_written < 0) {
+    return false;
+  }
+  size_t char_written = chr.write(buf, bytes_written);
+  if (char_written < bytes_written) {
+    Serial.printf("[ble] Error writing to config char. Wrote %d, expected %d\n",
+                  char_written, bytes_written);
+    return false;
+  }
+  // Maybe notify clients.
+  for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
+    if (Bluefruit.connected(conn_handler) && chr.notifyEnabled(conn_handler)) {
+      chr.notify(buf, sizeof(buf));
+    }
+  }
+  return true;
+}
+
 }  // namespace
 
-bool BLE::Init(Config& config) {
+bool BLE::Init(Config& config, IMU& imu) {
   config_ = &config;
+  imu_ = &imu;
 
   Bluefruit.autoConnLed(false);
 
@@ -34,13 +56,15 @@ bool BLE::Init(Config& config) {
     Serial.println("[ble] Error initializing BLE config service");
     return false;
   }
-  cfg_char_.setProperties(CHR_PROPS_WRITE);
+  cfg_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY | CHR_PROPS_WRITE);
   cfg_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
   cfg_char_.setWriteCallback(CfgCharWriteCallback);
+  cfg_char_.setMaxLen(64);
   if (cfg_char_.begin()) {
     Serial.println("[ble] Error initializing BLE config characteristic");
     return false;
   }
+  WriteToConfigChar(*config_, cfg_char_);
 
   // Init sensor service & characteristic.
   if (sensor_service_.begin()) {
@@ -101,9 +125,6 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
   buf[1] = 0x00;
 
   // Bytes 2 - 3: angle in milli radians.
-  // int16_t angle = sensor_data.tilt_degrees * 10;
-  // buf[2] = sensor_data.angle_mrad >> 8;
-  // buf[3] = sensor_data.angle_mrad & 0xff;
   // Bytes 2 - 3: angle in degrees * 10.
   Encode16BitFloat<int16_t>(sensor_data.tilt_degrees, buf, 2, 10);
 
@@ -138,11 +159,15 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
 }
 
 bool BLE::InjectOrientationData(const IMU::Orientation& orientation) {
-  uint8_t buf[8];
+  uint8_t buf[14];
   Encode16BitFloat<int16_t>(orientation.quaternion.w, buf, 0, 1000);
   Encode16BitFloat<int16_t>(orientation.quaternion.x, buf, 2, 1000);
   Encode16BitFloat<int16_t>(orientation.quaternion.y, buf, 4, 1000);
   Encode16BitFloat<int16_t>(orientation.quaternion.z, buf, 6, 1000);
+
+  Encode16BitFloat<int16_t>(orientation.euler_angles.psi, buf, 8, 100);
+  Encode16BitFloat<int16_t>(orientation.euler_angles.theta, buf, 10, 100);
+  Encode16BitFloat<int16_t>(orientation.euler_angles.phi, buf, 12, 100);
 
   uint16_t written_len = orientation_char_.write(buf, sizeof(buf));
   if (written_len < sizeof(buf)) {
@@ -170,9 +195,44 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
     return;
   }
   Serial.printf("[ble] Private CFG write callback len %d\n", len);
+
+  if (len < 1) {
+    Serial.printf("[ble] Insufficient data: %d bytes\n", len);
+  }
+  switch (data[0]) {
+    case 0x01: {
+      Serial.printf("[ble] Will calibrate IMU\n");
+      suspendLoop();
+      IMU::Offsets offsets = ble.imu_->Calibrate();
+      ble.config_->SetIMUOffsets(offsets);
+      ble.config_->CommitToFlash();
+      resumeLoop();
+      return;
+    }
+    case 0x02: {
+      Serial.printf("[ble] Will set polynomial coefficients\n");
+      Coeffs coeffs;
+      // Nasty error prone memcpy. It expects 3 32-bit IEEE-754 in
+      // little-endian.
+      memcpy(&coeffs, data + 1, sizeof(Coeffs));
+      Serial.printf("[ble] Coeffs: %f, %f, %f\n", coeffs.a2, coeffs.a1,
+                    coeffs.a0);
+      ble.config_->SetCoeffs(coeffs);
+      suspendLoop();
+      ble.config_->CommitToFlash();
+      resumeLoop();
+      return;
+    }
+    default:
+      Serial.printf("[ble] Unhandled config action: 0x%02x\n", data[0]);
+      return;
+  }
 }
 
 void BLE::ConnCallback(uint16_t conn_handle) {
+  // BLEConnection* conn = Bluefruit.Connection(conn_handle);
+  // conn->requestMtuExchange(64);
+
   BLE& ble = BLE::GetInstance();
   digitalToggle(LED_BUILTIN);
   if (++ble.n_conns_ < kMaxConnections) {
