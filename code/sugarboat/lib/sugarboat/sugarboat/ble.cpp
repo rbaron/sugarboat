@@ -116,7 +116,7 @@ inline static void Encode16BitFloat(float val, uint8_t* buf, size_t idx,
 }
 
 bool BLE::InjectSensorData(const SensorData& sensor_data) {
-  uint8_t buf[13];
+  uint8_t buf[14];
 
   // Byte 0
   //   Bits 0-3: Protocol version.
@@ -130,19 +130,19 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
 
   // Bytes 4 - 5: grams of sugar in 100 grams of solution (Brix scale).
   float brix = CalculateBrix(config_->GetCoeffs(), sensor_data.tilt_degrees);
-  Encode16BitFloat<uint16_t>(brix, buf, 4, 1000);
+  Encode16BitFloat<uint16_t>(brix, buf, 4, 100);
 
   // Bytes 6 - 7: specific gravity ("SG" scale).
   Encode16BitFloat<uint16_t>(BrixToSG(brix), buf, 6, 1000);
 
-  // Bytes 7 - 8: temp in Celcius * 100.
-  Encode16BitFloat<int16_t>(sensor_data.temp_celcius, buf, 7, 100);
+  // Bytes 8 - 9: temp in Celcius * 100.
+  Encode16BitFloat<int16_t>(sensor_data.temp_celcius, buf, 8, 100);
 
-  // Bytes 9 - 10: relative humidity in range [0, UINT16_MAX].
-  Encode16BitFloat<uint16_t>(sensor_data.rel_humi / 100, buf, 9, UINT16_MAX);
+  // Bytes 10 - 11: relative humidity in range [0, UINT16_MAX].
+  Encode16BitFloat<uint16_t>(sensor_data.rel_humi / 100, buf, 10, UINT16_MAX);
 
-  // Bytes 11 - 12: batt voltage * 1000.
-  Encode16BitFloat<uint16_t>(sensor_data.batt_volt, buf, 11, 1000);
+  // Bytes 12 - 13: batt voltage * 1000.
+  Encode16BitFloat<uint16_t>(sensor_data.batt_volt, buf, 12, 1000);
 
   uint16_t written_len = sensor_char_.write(buf, sizeof(buf));
   if (written_len < sizeof(buf)) {
@@ -226,6 +226,11 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
       resumeLoop();
       return;
     }
+    case 0x03: {
+      Serial.printf("[ble] Will set realtime run %d\n", data[1]);
+      ble.config_->SetRealtimeRun(data[1] != 0);
+      return;
+    }
     default:
       Serial.printf("[ble] Unhandled config action: 0x%02x\n", data[0]);
       return;
@@ -246,6 +251,7 @@ void BLE::ConnCallback(uint16_t conn_handle) {
 void BLE::DisconnCallback(uint16_t conn_handle, uint8_t reason) {
   BLE& ble = BLE::GetInstance();
   --ble.n_conns_;
+  ble.config_->SetRealtimeRun(false);
 }
 
 }  // namespace sugarboat

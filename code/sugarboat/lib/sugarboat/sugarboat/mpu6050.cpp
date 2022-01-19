@@ -23,6 +23,8 @@ int IMU::Init(const Offsets& offsets) {
     return 1;
   }
 
+  // mpu_.setIntDataReadyEnabled(true);
+
   mpu_.setDMPEnabled(true);
 
   // mpu_.setXAccelOffset(0);
@@ -38,12 +40,16 @@ int IMU::Init(const Offsets& offsets) {
   // mpu_.setYGyroOffset(60);
   // mpu_.setZGyroOffset(1);
 
-  // mpu_.setXAccelOffset(offsets.accel_x);
-  // mpu_.setYAccelOffset(offsets.accel_y);
-  // mpu_.setZAccelOffset(offsets.accel_z);
-  // mpu_.setXGyroOffset(offsets.gyro_x);
-  // mpu_.setYGyroOffset(offsets.gyro_y);
-  // mpu_.setZGyroOffset(offsets.gyro_z);
+  mpu_.setXAccelOffset(offsets.accel_x);
+  mpu_.setYAccelOffset(offsets.accel_y);
+  mpu_.setZAccelOffset(offsets.accel_z);
+  mpu_.setXGyroOffset(offsets.gyro_x);
+  mpu_.setYGyroOffset(offsets.gyro_y);
+  mpu_.setZGyroOffset(offsets.gyro_z);
+
+  // mpu_.setWakeCycleEnabled(true);
+  // mpu_.setWakeFrequency(0x01);
+  mpu_.setRate(0x1);
 
   Serial.printf("[imu] Initialized!\n");
   return 0;
@@ -51,6 +57,27 @@ int IMU::Init(const Offsets& offsets) {
 
 int IMU::DeInit() {
   return 0;
+}
+
+void IMU::Sleep() {
+  // mpu_.setFIFOEnabled(false);
+  // mpu_.resetFIFO();
+  mpu_.setDMPEnabled(false);
+  mpu_.setSleepEnabled(true);
+}
+
+void IMU::WakeUp() {
+  // mpu_.setWakeCycleEnabled(false);
+  // delay(10);
+  // mpu_.setFIFOEnabled(false);
+  // mpu_.resetFIFO();
+  mpu_.setSleepEnabled(false);
+  mpu_.setDMPEnabled(true);
+  // mpu_.setFIFOEnabled(true);
+  // while (!mpu_.getIntDataReadyStatus()) {
+  //   delay(10);
+  //   Serial.println("[imu] Waiting for data ready bit");
+  // }
 }
 
 IMU::Offsets IMU::Calibrate() {
@@ -114,17 +141,24 @@ IMU::Orientation IMU::GetOrientation() {
   Orientation orientation;
 
   if (!mpu_.dmpGetCurrentFIFOPacket(fifo_buffer_)) {
+    // if (!mpu_.GetCurrentFIFOPacket(fifo_buffer_, 64)) {
     Serial.println("[imu] Unable to get packet from fifo buffer");
     return orientation;
   }
 
-  mpu_.dmpGetQuaternion(&quaternion_, fifo_buffer_);
+  if (mpu_.dmpGetQuaternion(&quaternion_, fifo_buffer_)) {
+    Serial.println("[imu] Error in dmpGetQuaternion");
+    return orientation;
+  }
   orientation.quaternion.w = quaternion_.w;
   orientation.quaternion.x = quaternion_.x;
   orientation.quaternion.y = quaternion_.y;
   orientation.quaternion.z = quaternion_.z;
 
-  mpu_.dmpGetEuler((float*)&orientation.euler_angles, &quaternion_);
+  if (mpu_.dmpGetEuler((float*)&orientation.euler_angles, &quaternion_)) {
+    Serial.println("[imu] Error in dmpGetEuler");
+    return orientation;
+  }
   orientation.euler_angles.psi *= 180.0f / PI;
   orientation.euler_angles.theta *= 180.0f / PI;
   orientation.euler_angles.phi *= 180.0f / PI;

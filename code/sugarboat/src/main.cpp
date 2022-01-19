@@ -30,6 +30,8 @@ void setup() {
   pinMode(LED_BUILTIN2, OUTPUT);
   pinMode(SGRBT_BAT_SEN_PIN, INPUT);
 
+  digitalWrite(LED_BUILTIN2, HIGH);
+
   Wire.setPins(SGRBT_SDA_PIN, SGRBT_SCL_PIN);
   Wire.begin();
   Wire.setClock(400000);
@@ -57,36 +59,47 @@ void setup() {
       ;
   }
 
-  // Serial.printf("[main] Will calibrate:\n");
-  // offsets = imu.Calibrate();
-  // Serial.printf("[main] IMU offsets from calibration: %d %d %d %d %d %d\n",
-  //               offsets.accel_x, offsets.accel_y, offsets.accel_z,
-  //               offsets.gyro_x, offsets.gyro_y, offsets.gyro_z);
-
-  // config.SetIMUOffsets(offsets);
-  // if (!config.CommitToFlash()) {
-  //   Serial.printf("[main] Error commiting config to flash\n");
-  // }
-
   sugarboat::BLE &ble = sugarboat::BLE::GetInstance();
   if (!ble.Init(config, imu)) {
     Serial.println("[main] Error intializing BLE");
     while (true)
       ;
   }
+  delay(500);
   ble.StartAdv();
+
+  digitalWrite(LED_BUILTIN2, LOW);
 }
 
 sugarboat::SensorData sensor_data{0, 0, 0, 0};
 void loop() {
+  bool is_realtime = config.GetRealtimeRun();
+
+  // Serial.printf("Realtime run: %d\n", config.GetRealtimeRun());
   // float angle = imu.GetTilt();
   // Serial.printf("Angle: %.2f\n", angle);
+  imu.WakeUp();
+  if (!is_realtime) {
+    Serial.printf("[main] Waking up IMU...\n");
+    // TODO: Better strategy for waiting IMU values to converge.
+    delay(3000);
+    // for (int i = 0; i < 300; i++) {
+    //   sensor_data.tilt_degrees = imu.GetTilt();
+    //   Serial.printf("[main] Discarded tilt: %.2f\n",
+    //   sensor_data.tilt_degrees);
+    // }
+  }
+
   sugarboat::IMU::Orientation orientation = imu.GetOrientation();
+  sensor_data.tilt_degrees = imu.GetTilt();
+  Serial.printf("[main] Tilt: %.2f\n", sensor_data.tilt_degrees);
+
+  if (!is_realtime) {
+    Serial.printf("[main] Sleeping IMU...\n");
+    imu.Sleep();
+  }
+
   ble.InjectOrientationData(orientation);
-  // logger.printf("w: %.2f x: %.2f y: %.2f z:%.2f\n",
-  // orientation.quaternion.w,
-  // //               orientation.quaternion.x, orientation.quaternion.y,
-  // //               orientation.quaternion.z);
 
   float batt_v = 2 * 3.6f * analogRead(SGRBT_BAT_SEN_PIN) / 1024.0f;
 
@@ -94,7 +107,6 @@ void loop() {
   sensor_data.rel_humi = sht30.GetHumi();
   sensor_data.temp_celcius = sht30.GetTemp();
   delay(50);
-  sensor_data.tilt_degrees = imu.GetTilt();
 
   if (isnan(sensor_data.rel_humi)) {
     sensor_data.rel_humi = 0;
@@ -108,6 +120,9 @@ void loop() {
   // Serial.printf("Angle: %.2f Temp: %.2f, Humi: %.2f Batt: %.2f\n",
   //               sensor_data.tilt_degrees, sensor_data.temp_celcius,
   //               sensor_data.rel_humi, sensor_data.batt_volt);
-  digitalToggle(LED_BUILTIN2);
-  delay(100);
+
+  if (!is_realtime) {
+    Serial.printf("[main] Delaying...\n");
+    delay(5000);
+  }
 }

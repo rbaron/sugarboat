@@ -41,6 +41,14 @@ class Config {
     has_coeffs_ = true;
   }
 
+  void SetRealtimeRun(bool value) {
+    realtime_run_ = value;
+  }
+
+  bool GetRealtimeRun() {
+    return realtime_run_;
+  }
+
   size_t Serialize(uint8_t *buf, size_t buf_size) const;
 
  private:
@@ -52,6 +60,12 @@ class Config {
 
   bool has_coeffs_ = false;
   Coeffs coeffs_;
+
+  // Setting realtime_run_ to true will cause sensors to be read as fast as
+  // possible and prevent any sort of power saving strategy. It's useful for
+  // debugging and/or demos. This field is not persisted, as it should only
+  // rarely be used.
+  bool realtime_run_ = false;
 };
 }  // namespace sugarboat
 

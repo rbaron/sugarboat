@@ -43,6 +43,8 @@ class IMU {
 
   int Init(const Offsets &offsets);
   int DeInit();
+  void Sleep();
+  void WakeUp();
   Offsets Calibrate();
   float GetTilt();
   Orientation GetOrientation();
