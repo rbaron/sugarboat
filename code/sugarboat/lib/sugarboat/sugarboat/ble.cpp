@@ -22,7 +22,7 @@ bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
   // Maybe notify clients.
   for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
     if (Bluefruit.connected(conn_handler) && chr.notifyEnabled(conn_handler)) {
-      chr.notify(buf, sizeof(buf));
+      chr.notify(conn_handler, buf, sizeof(buf));
     }
   }
   return true;
@@ -41,7 +41,8 @@ bool BLE::Init(Config& config, IMU& imu) {
     return false;
   }
 
-  Bluefruit.setTxPower(4);
+  Bluefruit.setTxPower(0);
+
   Bluefruit.setName("sugarboat");
   Bluefruit.Periph.setConnectCallback(ConnCallback);
   Bluefruit.Periph.setDisconnectCallback(DisconnCallback);
@@ -91,9 +92,9 @@ bool BLE::StartAdv() {
   Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
   Bluefruit.Advertising.addTxPower();
 
+  Bluefruit.Advertising.addService(sensor_service_);
   Bluefruit.Advertising.addService(bleuart_);
   Bluefruit.Advertising.addService(cfg_service_);
-  Bluefruit.Advertising.addService(sensor_service_);
 
   Bluefruit.ScanResponse.addName();
 
@@ -102,7 +103,7 @@ bool BLE::StartAdv() {
   // life, use
   // https://devzone.nordicsemi.com/nordic/power/w/opp/2/online-power-profiler-for-ble.
   Bluefruit.Advertising.setInterval(32, 244);
-  Bluefruit.Advertising.setFastTimeout(30);
+  Bluefruit.Advertising.setFastTimeout(1);
   Bluefruit.Advertising.start(0);
 
   return true;
@@ -155,7 +156,7 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
   for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
     if (Bluefruit.connected(conn_handler) &&
         sensor_char_.notifyEnabled(conn_handler)) {
-      sensor_char_.notify(buf, sizeof(buf));
+      sensor_char_.notify(conn_handler, buf, sizeof(buf));
     }
   }
   return true;
@@ -183,7 +184,7 @@ bool BLE::InjectOrientationData(const IMU::Orientation& orientation) {
   for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
     if (Bluefruit.connected(conn_handler) &&
         orientation_char_.notifyEnabled(conn_handler)) {
-      orientation_char_.notify(buf, sizeof(buf));
+      orientation_char_.notify(conn_handler, buf, sizeof(buf));
     }
   }
   return true;
@@ -246,12 +247,17 @@ void BLE::ConnCallback(uint16_t conn_handle) {
   if (++ble.n_conns_ < kMaxConnections) {
     Bluefruit.Advertising.start(0);
   }
+  Serial.printf("[ble] Connection callback. #clients: %d\n", ble.n_conns_);
 }
 
 void BLE::DisconnCallback(uint16_t conn_handle, uint8_t reason) {
   BLE& ble = BLE::GetInstance();
   --ble.n_conns_;
+  Serial.printf("[ble] Disconnect callback. #clients: %d\n", ble.n_conns_);
   ble.config_->SetRealtimeRun(false);
+
+  // Keep or resume advertising.
+  Bluefruit.Advertising.start(0);
 }
 
 }  // namespace sugarboat

@@ -82,7 +82,9 @@ void loop() {
   if (!is_realtime) {
     Serial.printf("[main] Waking up IMU...\n");
     // TODO: Better strategy for waiting IMU values to converge.
-    delay(3000);
+    if (config.WaitForConfigChangeOrDelay(10000)) {
+      return;
+    }
     // for (int i = 0; i < 300; i++) {
     //   sensor_data.tilt_degrees = imu.GetTilt();
     //   Serial.printf("[main] Discarded tilt: %.2f\n",
@@ -123,6 +125,6 @@ void loop() {
 
   if (!is_realtime) {
     Serial.printf("[main] Delaying...\n");
-    delay(5000);
+    config.WaitForConfigChangeOrDelay(5000);
   }
 }
