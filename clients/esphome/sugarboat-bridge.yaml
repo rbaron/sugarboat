@@ -1,0 +1,84 @@
+#
+# Sugarboat - Home Assistant - Esphome example bridge.
+#
+# Make sure to:
+# - Copy secrets.yaml.example to secrets.yaml and fill it
+# - Update the MAC address of the sugarboat you want to track in the ble_client section below
+
+esphome:
+  name: sugarboat-bridge
+  platform: ESP32
+  board: lolin32
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+api:
+  password: !secret home_assistant_native_api_password
+
+esp32_ble_tracker:
+
+# Update MAC Address of your sugarboat.
+ble_client:
+  - mac_address: DC:A6:64:68:EF:5F
+    id: sugarboat_ble_client
+
+sensor:
+  # Tilt angle.
+  - platform: ble_client
+    ble_client_id: sugarboat_ble_client
+    name: Sugarboat 1 Tilt Angle
+    service_uuid: 9b7d5c6f-a8ca-4080-9290-d4afb5ac64a3
+    characteristic_uuid: 527d0f9b-db66-48c5-9089-071e1a795b6f
+    accuracy_decimals: 1
+    force_update: true
+    icon: mdi:angle-acute
+    unit_of_measurement: °
+    notify: true
+    lambda: |-
+      int16_t *v16 = (int16_t *) &x[2];
+      return *v16 / 10.0f;
+  # Brix: sugar content.
+  - platform: ble_client
+    ble_client_id: sugarboat_ble_client
+    name: "Sugarboat 1 Sugar Content"
+    service_uuid: 9b7d5c6f-a8ca-4080-9290-d4afb5ac64a3
+    characteristic_uuid: 527d0f9b-db66-48c5-9089-071e1a795b6f
+    accuracy_decimals: 1
+    force_update: true
+    icon: mdi:spoon-sugar
+    unit_of_measurement: °Bx
+    lambda: |-
+      uint16_t *v16 = (uint16_t *) &x[4];
+      return *v16 / 100.0f;
+  # SG: specific gravity.
+  - platform: ble_client
+    ble_client_id: sugarboat_ble_client
+    name: "Sugarboat 1 Specific Gravity"
+    service_uuid: 9b7d5c6f-a8ca-4080-9290-d4afb5ac64a3
+    characteristic_uuid: 527d0f9b-db66-48c5-9089-071e1a795b6f
+    accuracy_decimals: 3
+    force_update: true
+    icon: mdi:cup-water
+    unit_of_measurement: ""
+    lambda: |-
+      uint16_t *v16 = (uint16_t *) &x[6];
+      return *v16 / 1000.0f;
+  # Battery voltage.
+  - platform: ble_client
+    ble_client_id: sugarboat_ble_client
+    name: "Sugarboat 1 Battery Voltage"
+    service_uuid: 9b7d5c6f-a8ca-4080-9290-d4afb5ac64a3
+    characteristic_uuid: 527d0f9b-db66-48c5-9089-071e1a795b6f
+    accuracy_decimals: 2
+    force_update: true
+    icon: mdi:battery
+    unit_of_measurement: V
+    lambda: |-
+      uint16_t *v16 = (uint16_t *) &x[12];
+      return *v16 / 1000.0f;
+
+# Enable logging
+logger:
+  level: VERBOSE

@@ -36,6 +36,7 @@ A [preform PET tube (or "petling")](https://en.wikipedia.org/wiki/Polyethylene_t
 | [`code/`](./code)                      | Firmware - a [PlatformIO](https://platformio.org/) project using the Arduino framework                                                     |
 | [`clients/web/`](./clients/web)         | A web interface for calibrating, configuring and reading sugarboat's sensors                                                             |
 | [`clients/arduino/`](./clients/arduino) | A barebones Arduino sketch showing how to read sugarboat's tilt angle, temperature & battery voltage using a Bluetooth Low Energy client |
+| [`clients/esphome/`](./clients/esphome) | An [ESPHome](https://esphome.io/) client that integrates with [Home Assistant](https://www.home-assistant.io/) |
 
 # Web client
 ![web client screenshot](./assets/docs/web-client.png)
@@ -55,7 +56,10 @@ I have [forked the Adafruit nRF52 Bootloader](https://github.com/rbaron/Adafruit
 $ git clone git@github.com:rbaron/Adafruit_nRF52_Bootloader.git
 $ cd Adafruit_nRF52_Bootloader/
 $ make BOARD=sugarboat all
-$ make BOARD=sugarboat flash
+$ make BOARD=sugarboat erase
+# Look for the build target that contains the merged bootloader + Nordic's SoftDevice and flash it.
+# It will be something like _build/build-sugarboat/sugarboat_bootloader-X.X.X-XXX-XXXXXXXXX_s140_6.1.1.hex:
+$ nrfjprog --program _build/build-sugarboat/sugarboat_bootloader-0.4.0-149-g5ffac2e_s140_6.1.1.hex -f nrf52 --reset
 ```
 
 Note that you will need a SWD programmer to complete this operation. A good choice for hobbyists is a [J-Link EDU Mini](https://www.adafruit.com/product/3571). If you buy one, consider getting it from Adafruit.
