@@ -25,7 +25,6 @@ class Config {
 
   // Returns true if the config has changed.
   bool WaitForConfigChangeOrDelay(unsigned int delay_ms) {
-    // if (xSemaphoreTake(x_config_semaphore_, delay_ms / portTICK_PERIOD_MS)) {
     if (xSemaphoreTake(x_config_semaphore_, pdMS_TO_TICKS(delay_ms))) {
       // Immediately give the semaphore back.
       xSemaphoreGive(x_config_semaphore_);

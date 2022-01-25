@@ -60,24 +60,13 @@ int IMU::DeInit() {
 }
 
 void IMU::Sleep() {
-  // mpu_.setFIFOEnabled(false);
-  // mpu_.resetFIFO();
   mpu_.setDMPEnabled(false);
   mpu_.setSleepEnabled(true);
 }
 
 void IMU::WakeUp() {
-  // mpu_.setWakeCycleEnabled(false);
-  // delay(10);
-  // mpu_.setFIFOEnabled(false);
-  // mpu_.resetFIFO();
   mpu_.setSleepEnabled(false);
   mpu_.setDMPEnabled(true);
-  // mpu_.setFIFOEnabled(true);
-  // while (!mpu_.getIntDataReadyStatus()) {
-  //   delay(10);
-  //   Serial.println("[imu] Waiting for data ready bit");
-  // }
 }
 
 IMU::Offsets IMU::Calibrate() {
@@ -93,13 +82,6 @@ IMU::Offsets IMU::Calibrate() {
   mpu_.PrintActiveOffsets();
 
   IMU::Offsets offsets;
-
-  // offsets.accel_x = (-1743);
-  // offsets.accel_y = (719);
-  // offsets.accel_z = (1101);
-  // offsets.gyro_x = (100);
-  // offsets.gyro_y = (60);
-  // offsets.gyro_z = (1);
 
   offsets.accel_x = mpu_.getXAccelOffset();
   offsets.accel_y = mpu_.getYAccelOffset();
@@ -141,7 +123,6 @@ IMU::Orientation IMU::GetOrientation() {
   Orientation orientation;
 
   if (!mpu_.dmpGetCurrentFIFOPacket(fifo_buffer_)) {
-    // if (!mpu_.GetCurrentFIFOPacket(fifo_buffer_, 64)) {
     Serial.println("[imu] Unable to get packet from fifo buffer");
     return orientation;
   }

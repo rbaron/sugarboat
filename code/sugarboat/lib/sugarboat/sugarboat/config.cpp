@@ -35,11 +35,6 @@ size_t Config::Serialize(uint8_t *buf, size_t buf_size) const {
   memcpy(buf + offset, &coeffs_, sizeof(coeffs_));
   offset += sizeof(coeffs_);
 
-  // for (int x = 0; x < kBuffSize; x++) {
-  //   Serial.printf("%02x ", buf[x]);
-  // }
-  // Serial.println();
-
   return offset;
 }
 
@@ -111,22 +106,12 @@ Config Config::ReadFromFlash() {
                 kBuffSize);
 
   file.close();
-  // for (int x = 0; x < read_bytes; x++) {
-  //   Serial.printf("%02x ", buff[x]);
-  // }
-  // Serial.println();
   return Deserialize(buff, read_bytes);
 }
 
 bool Config::CommitToFlash() {
   uint8_t buff[kBuffSize] = {0x00};
   size_t data_size = Serialize(buff, sizeof(buff));
-
-  // Serial.printf("Will write Buffer: \n");
-  // for (int x = 0; x < kBuffSize; x++) {
-  //   Serial.printf("%02x ", buff[x]);
-  // }
-  // Serial.println();
 
   if (!InternalFS.begin()) {
     Serial.println("[config] Error initializing the filesystem\n");
@@ -137,7 +122,6 @@ bool Config::CommitToFlash() {
   // but I'm seeing otherwise. Explicitly remove it before hand seems to work.
   if (!InternalFS.remove(kConfigFilename)) {
     Serial.printf("[config] Unable to remove config file - first run?\n");
-    // return false;
   }
 
   Adafruit_LittleFS_Namespace::File file(InternalFS);

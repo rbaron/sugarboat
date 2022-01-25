@@ -1,21 +1,18 @@
 
 #include <Adafruit_LittleFS.h>
-// #include <Adafruit_SHT31.h>
 #include <Adafruit_TinyUSB.h>
 #include <Arduino.h>
 #include <bluefruit.h>
 
+#include "Wire.h"
 #include "sugarboat/ble.h"
 #include "sugarboat/config.h"
+#include "sugarboat/mpu6050.h"
 #include "sugarboat/sensor_data.h"
 #include "sugarboat/sht30.h"
-// #include "sugarboat/logger.h"
-#include "Wire.h"
-#include "sugarboat/mpu6050.h"
 
 sugarboat::Config config;
 sugarboat::BLE &ble = sugarboat::BLE::GetInstance();
-// sugarboat::Logger logger(Serial, ble);
 sugarboat::IMU imu;
 sugarboat::SHT30 sht30;
 

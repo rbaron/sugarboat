@@ -243,9 +243,6 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
 }
 
 void BLE::ConnCallback(uint16_t conn_handle) {
-  // BLEConnection* conn = Bluefruit.Connection(conn_handle);
-  // conn->requestMtuExchange(64);
-
   BLE& ble = BLE::GetInstance();
   digitalToggle(LED_BUILTIN);
   if (++ble.n_conns_ < kMaxConnections) {
