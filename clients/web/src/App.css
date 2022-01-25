@@ -1,0 +1,152 @@
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
+
+:root {
+  --grey: #f3f3f3;
+  --disabled-grey: #aaa;
+  --blue: #2797ff;
+  --margin: 8px;
+  --padding: 8px;
+}
+
+body {
+  /* font-family: "VT323", monospace; */
+}
+
+h1 {
+  font-family: "VT323", monospace;
+  font-weight: normal;
+}
+
+button {
+  font-family: "VT323", monospace;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  background-color: var(--blue);
+  border: none;
+  padding: var(--padding);
+  color: white;
+  display: flex;
+  align-items: center;
+}
+
+button:hover {
+  filter: brightness(95%);
+}
+
+button:active {
+  filter: brightness(85%);
+}
+
+button:disabled {
+  background-color: var(--disabled-grey);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  border: none;
+  margin: var(--margin);
+  padding: var(--padding);
+}
+
+thead {
+  font-family: "VT323", monospace;
+  font-weight: normal;
+}
+
+td,
+th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: var(--padding);
+  font-size: 0.9rem;
+}
+
+/* tr:nth-child(even) {
+  background-color: #dddddd;
+} */
+
+.App {
+  max-width: 1124px;
+  margin: 0 auto;
+}
+
+.Header-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-items: flex-start;
+  margin-top: var(--margin);
+  margin-bottom: var(--margin);
+}
+
+.Header-connectButton {
+  font-size: 2rem;
+}
+
+img.Logo {
+  height: 36px;
+  margin-right: var(--margin);
+  padding-right: var(--padding);
+  margin-top: var(--margin);
+  margin-bottom: var(--margin);
+}
+
+.Container {
+  display: flex;
+  flex-direction: row;
+}
+
+.Container-left {
+  flex: 1;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.ValueBoxes-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+.ValueBox-container {
+  margin: var(--margin);
+  padding: var(--padding);
+  background-color: var(--grey);
+  flex: 1;
+}
+
+.ValueBox-title {
+  font-family: "VT323", monospace;
+  font-size: 1.25rem;
+}
+
+.ValueBox-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.DataBox-content {
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+.Model-container {
+  margin: var(--margin);
+}
+
+.Switch-container {
+  font-family: "VT323", monospace;
+  margin: var(--margin);
+}
