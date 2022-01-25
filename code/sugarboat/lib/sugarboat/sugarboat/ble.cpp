@@ -85,6 +85,11 @@ bool BLE::Init(Config& config, IMU& imu) {
     return false;
   }
 
+  ble_gap_addr_t addr = Bluefruit.getAddr();
+  Serial.printf("[ble] MAC Address: ");
+  Serial.printBufferReverse(addr.addr, BLE_GAP_ADDR_LEN, ':');
+  Serial.println();
+
   return true;
 }
 
@@ -125,7 +130,6 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
   // Byte 1 is reversed for future use.
   buf[1] = 0x00;
 
-  // Bytes 2 - 3: angle in milli radians.
   // Bytes 2 - 3: angle in degrees * 10.
   Encode16BitFloat<int16_t>(sensor_data.tilt_degrees, buf, 2, 10);
 

@@ -37,6 +37,7 @@ void setup() {
   Wire.setClock(400000);
 
   Serial.begin(115200);
+  // Uncomment to block the execution until the USB serial port is open.
   // while (!Serial)
   //   ;
   delay(1000);
@@ -75,9 +76,6 @@ sugarboat::SensorData sensor_data{0, 0, 0, 0};
 void loop() {
   bool is_realtime = config.GetRealtimeRun();
 
-  // Serial.printf("Realtime run: %d\n", config.GetRealtimeRun());
-  // float angle = imu.GetTilt();
-  // Serial.printf("Angle: %.2f\n", angle);
   imu.WakeUp();
   if (!is_realtime) {
     Serial.printf("[main] Waking up IMU...\n");
@@ -85,11 +83,6 @@ void loop() {
     if (config.WaitForConfigChangeOrDelay(10000)) {
       return;
     }
-    // for (int i = 0; i < 300; i++) {
-    //   sensor_data.tilt_degrees = imu.GetTilt();
-    //   Serial.printf("[main] Discarded tilt: %.2f\n",
-    //   sensor_data.tilt_degrees);
-    // }
   }
 
   sugarboat::IMU::Orientation orientation = imu.GetOrientation();
