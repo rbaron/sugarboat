@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.a9ba5bc8.css",
-    "main.js": "/static/js/main.352ab10b.js",
-    "static/media/sugarboat.png": "/static/media/sugarboat.173dfe7569a8747b85cd.png",
-    "index.html": "/index.html",
-    "static/media/bluetooth.svg": "/static/media/bluetooth.ddda6a400361d11d4f2894fd4bd5ce0e.svg",
-    "main.a9ba5bc8.css.map": "/static/css/main.a9ba5bc8.css.map",
-    "main.352ab10b.js.map": "/static/js/main.352ab10b.js.map"
+    "main.css": "/sugarboat/static/css/main.a9ba5bc8.css",
+    "main.js": "/sugarboat/static/js/main.7cbf17d5.js",
+    "static/media/sugarboat.png": "/sugarboat/static/media/sugarboat.173dfe7569a8747b85cd.png",
+    "index.html": "/sugarboat/index.html",
+    "static/media/bluetooth.svg": "/sugarboat/static/media/bluetooth.ddda6a400361d11d4f2894fd4bd5ce0e.svg",
+    "main.a9ba5bc8.css.map": "/sugarboat/static/css/main.a9ba5bc8.css.map",
+    "main.7cbf17d5.js.map": "/sugarboat/static/js/main.7cbf17d5.js.map"
   },
   "entrypoints": [
     "static/css/main.a9ba5bc8.css",
-    "static/js/main.352ab10b.js"
+    "static/js/main.7cbf17d5.js"
   ]
 }
