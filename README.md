@@ -2,7 +2,7 @@
 	<img alt="sugarboat logo" src="./kicad/sugarboat/lib/sugarboat.png" width=512>
 <p>
 
-An open source digital [hydrometer](https://en.wikipedia.org/wiki/Hydrometer). The main use case is measuring the amount of sugar in liquids during the process of beer and wine making.
+A digital [hydrometer](https://en.wikipedia.org/wiki/Hydrometer). The main use case is measuring the amount of sugar in liquids during the process of beer and wine making.
 
 # How does it work?
 Sugarboat floats on top of the liquid being measured. Because of its shifted center of mass, it will float at an angle. This *tilt angle* (see image below) is larger for denser liquids and smaller for less dense liquids. We can then estimate the density of a solution from this angle.
@@ -65,6 +65,4 @@ $ nrfjprog --program _build/build-sugarboat/sugarboat_bootloader-0.4.0-149-g5ffa
 Note that you will need a SWD programmer to complete this operation. A good choice for hobbyists is a [J-Link EDU Mini](https://www.adafruit.com/product/3571). If you buy one, consider getting it from Adafruit.
 
 # License
-The hardware and associated design files are released under the [Creative Commons CC BY-SA 4.0 license](https://creativecommons.org/licenses/by-sa/4.0/).
-
-The code is released under the [MIT license](https://opensource.org/licenses/MIT).
+[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
