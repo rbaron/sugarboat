@@ -107,7 +107,8 @@ bool BLE::StartAdv() {
   // Advertisement interval in units of 625 us. For estimating impact in battery
   // life, use
   // https://devzone.nordicsemi.com/nordic/power/w/opp/2/online-power-profiler-for-ble.
-  Bluefruit.Advertising.setInterval(32, 244);
+  // Bluefruit.Advertising.setInterval(32, 244);
+  Bluefruit.Advertising.setInterval(32, 3200);
   Bluefruit.Advertising.setFastTimeout(1);
   Bluefruit.Advertising.start(0);
 

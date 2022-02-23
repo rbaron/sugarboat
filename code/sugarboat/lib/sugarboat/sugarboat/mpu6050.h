@@ -48,6 +48,19 @@ class IMU {
   float GetTilt();
   Orientation GetOrientation();
 
+  void Loop() {
+    int fifo_count = mpu_.getFIFOCount();
+    Serial.printf("[mpu] FIFO count: %d\n", fifo_count);
+    int16_t x, y, z;
+    mpu_.getAcceleration(&x, &y, &z);
+    float angle = 180.0f * atan2(y, z) / PI;
+    Serial.printf("angle: %.2f, accel x: %d, y: %d, z: %d\n", angle, x, y, z);
+    // for (int i = 0; i < fifo_count; i++) {
+    //   uint8_t fifo_byte = mpu_.getFIFOByte();
+    //   Serial.printf("\tFIFO BYTE: 0x%02x\n", fifo_byte);
+    // }
+  }
+
  private:
   MPU6050 mpu_;
   uint8_t fifo_buffer_[64];

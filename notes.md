@@ -56,3 +56,7 @@
 *
 
 ### Row pitch yaw
+
+## Alternative approach
+* [Inclination sensing with accelerometer](https://www.digikey.com/en/articles/using-an-accelerometer-for-inclination-sensing) article from DigiKey
+* [LIS2DW](https://www.st.com/resource/en/datasheet/lis2dw.pdf) ultra low power accelerometer

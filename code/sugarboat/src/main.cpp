@@ -37,7 +37,7 @@ void setup() {
   // Uncomment to block the execution until the USB serial port is open.
   // while (!Serial)
   //   ;
-  delay(1000);
+  delay(500);
 
   if (!sht30.Init()) {
     Serial.println("[main] Error initializing SHT30");
@@ -63,7 +63,7 @@ void setup() {
     while (true)
       ;
   }
-  delay(500);
+  delay(100);
   ble.StartAdv();
 
   digitalWrite(LED_BUILTIN2, LOW);
@@ -117,4 +117,11 @@ void loop() {
     Serial.printf("[main] Delaying...\n");
     config.WaitForConfigChangeOrDelay(5000);
   }
+
+  // imu.Loop();
+  // imu.Sleep();
+  // delay(5000);
+  // imu.WakeUp();
+  // delay(5000);
+  // Serial.println("Here");
 }

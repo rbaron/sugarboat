@@ -5,7 +5,61 @@
 #include "sugarboat/config.h"
 
 namespace sugarboat {
-namespace {}  // namespace
+namespace {
+
+int InitMPULowPower(MPU6050& mpu) {
+  // Disable DMP.
+  mpu.setDMPEnabled(false);
+
+  // Enable FIFO.
+  mpu.setFIFOEnabled(true);
+
+  // mpu_.setWakeCycleEnabled(true);
+  // 5 Hz accelerometer wakeup frequency - only applies to low power mode.
+  // mpu_.setWakeFrequency(0x01);
+  // mpu_.setRate(0x1);
+  // Use internal clock source. Requirement for low power mode.
+  // mpu_.setClockSource(0x00);
+
+  // Disable temp sensor.
+  mpu.setTempSensorEnabled(false);
+
+  // Disable gyro.
+  mpu.setStandbyXGyroEnabled(true);
+  mpu.setStandbyYGyroEnabled(true);
+  mpu.setStandbyZGyroEnabled(true);
+
+  // Disable gyro in FIFO.
+  mpu.setXGyroFIFOEnabled(false);
+  mpu.setYGyroFIFOEnabled(false);
+  mpu.setZGyroFIFOEnabled(false);
+
+  // Enable accel in FIFO.
+  mpu.setAccelFIFOEnabled(true);
+
+  // Accel wake up frequency (only in low power mode).
+  mpu.setWakeFrequency(0x00);
+
+  // Use internal clock source. Requirement for low power mode?
+  mpu.setClockSource(0x0);
+
+  return 0;
+}
+
+int InitMPUDMPMode(MPU6050& mpu) {
+  // The MPU6050's mysterious DMP processor needs its firmware
+  // written every time it's powered on.
+  if (mpu.dmpInitialize()) {
+    Serial.printf("[imu] Failed to initialize DMP\n");
+    return 1;
+  }
+
+  mpu.setIntDataReadyEnabled(true);
+  mpu.setDMPEnabled(true);
+
+  return 0;
+}
+}  // namespace
 
 int IMU::Init(const Offsets& offsets) {
   pinMode(FLT_MPU_INTERRUPT_PIN, INPUT);
@@ -18,27 +72,16 @@ int IMU::Init(const Offsets& offsets) {
 
   // The MPU6050's mysterious DMP processor needs its firmware
   // written every time it's powered on.
-  if (mpu_.dmpInitialize()) {
-    Serial.printf("[imu] Failed to initialize DMP\n");
-    return 1;
-  }
+  // if (mpu_.dmpInitialize()) {
+  //   Serial.printf("[imu] Failed to initialize DMP\n");
+  //   return 1;
+  // }
 
   // mpu_.setIntDataReadyEnabled(true);
 
-  mpu_.setDMPEnabled(true);
+  // mpu_.setDMPEnabled(true);
 
-  // mpu_.setXAccelOffset(0);
-  // mpu_.setYAccelOffset(0);
-  // mpu_.setZAccelOffset(0);
-  // mpu_.setXGyroOffset(0);
-  // mpu_.setYGyroOffset(0);
-  // mpu_.setZGyroOffset(0);
-  // mpu_.setXAccelOffset(-1743);
-  // mpu_.setYAccelOffset(719);
-  // mpu_.setZAccelOffset(1101);
-  // mpu_.setXGyroOffset(100);
-  // mpu_.setYGyroOffset(60);
-  // mpu_.setZGyroOffset(1);
+  // mpu_.setDMPEnabled(false);
 
   mpu_.setXAccelOffset(offsets.accel_x);
   mpu_.setYAccelOffset(offsets.accel_y);
@@ -47,9 +90,8 @@ int IMU::Init(const Offsets& offsets) {
   mpu_.setYGyroOffset(offsets.gyro_y);
   mpu_.setZGyroOffset(offsets.gyro_z);
 
-  // mpu_.setWakeCycleEnabled(true);
-  // mpu_.setWakeFrequency(0x01);
-  mpu_.setRate(0x1);
+  // InitMPULowPower(mpu_);
+  InitMPUDMPMode(mpu_);
 
   Serial.printf("[imu] Initialized!\n");
   return 0;
