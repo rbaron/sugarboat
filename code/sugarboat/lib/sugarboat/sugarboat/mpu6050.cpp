@@ -12,14 +12,7 @@ int InitMPULowPower(MPU6050& mpu) {
   mpu.setDMPEnabled(false);
 
   // Enable FIFO.
-  mpu.setFIFOEnabled(true);
-
-  // mpu_.setWakeCycleEnabled(true);
-  // 5 Hz accelerometer wakeup frequency - only applies to low power mode.
-  // mpu_.setWakeFrequency(0x01);
-  // mpu_.setRate(0x1);
-  // Use internal clock source. Requirement for low power mode.
-  // mpu_.setClockSource(0x00);
+  // mpu.setFIFOEnabled(true);
 
   // Disable temp sensor.
   mpu.setTempSensorEnabled(false);
@@ -35,13 +28,25 @@ int InitMPULowPower(MPU6050& mpu) {
   mpu.setZGyroFIFOEnabled(false);
 
   // Enable accel in FIFO.
-  mpu.setAccelFIFOEnabled(true);
+  // mpu.setAccelFIFOEnabled(true);
 
   // Accel wake up frequency (only in low power mode).
-  mpu.setWakeFrequency(0x00);
+  mpu.setWakeFrequency(0x02);
 
   // Use internal clock source. Requirement for low power mode?
   mpu.setClockSource(0x0);
+
+  // Low power sequence.
+  // Set CYCLE bit to 1 => PWR_MGMT_1[5]
+  // mpu.setWakeCycleEnabled(true);
+  // Set SLEEP bit to 0.
+  mpu.setSleepEnabled(false);
+  //  Set TEMP_DIS bit to 1 => PWR_MGMT_1[3]
+  mpu.setTempSensorEnabled(false);
+  // Set STBY_XG, STBY_YG, STBY_ZG bits to 1 => PWR_MGMT_2[0, 1, 2]
+  mpu.setStandbyXGyroEnabled(true);
+  mpu.setStandbyYGyroEnabled(true);
+  mpu.setStandbyZGyroEnabled(true);
 
   return 0;
 }
@@ -90,8 +95,8 @@ int IMU::Init(const Offsets& offsets) {
   mpu_.setYGyroOffset(offsets.gyro_y);
   mpu_.setZGyroOffset(offsets.gyro_z);
 
-  // InitMPULowPower(mpu_);
-  InitMPUDMPMode(mpu_);
+  InitMPULowPower(mpu_);
+  // InitMPUDMPMode(mpu_);
 
   Serial.printf("[imu] Initialized!\n");
   return 0;
@@ -102,13 +107,13 @@ int IMU::DeInit() {
 }
 
 void IMU::Sleep() {
-  mpu_.setDMPEnabled(false);
+  // mpu_.setDMPEnabled(false);
   mpu_.setSleepEnabled(true);
 }
 
 void IMU::WakeUp() {
   mpu_.setSleepEnabled(false);
-  mpu_.setDMPEnabled(true);
+  // mpu_.setDMPEnabled(true);
 }
 
 IMU::Offsets IMU::Calibrate() {
@@ -135,27 +140,45 @@ IMU::Offsets IMU::Calibrate() {
 }
 
 float IMU::GetTilt() {
-  while (!mpu_.getFIFOCount())
-    ;
+  // DMP stuff.
+  // while (!mpu_.getFIFOCount())
+  //   ;
 
-  if (!mpu_.dmpGetCurrentFIFOPacket(fifo_buffer_)) {
-    Serial.println("[imu] Unable to get packet from fifo buffer");
-    return 0.0f;
+  // if (!mpu_.dmpGetCurrentFIFOPacket(fifo_buffer_)) {
+  //   Serial.println("[imu] Unable to get packet from fifo buffer");
+  //   return 0.0f;
+  // }
+
+  // mpu_.dmpGetQuaternion(&quaternion_, fifo_buffer_);
+  // VectorFloat z_rotated{0, 0, 1};
+  // z_rotated.rotate(&quaternion_);
+
+  // // This is the angle between the reference frame's z-axis and
+  // // the IMU's's frame z-axis.
+  // // cos(theta) = dot(u, v) / (mag(u) * mag(v))
+  // float angle = acos(z_rotated.z / z_rotated.getMagnitude());
+
+  // // To make this angle easier to interpret, we convention that 0 degrees
+  // // should correspond to the sensor in the upright position (aligned with
+  // // gravity). To do that, we just subtract the angle from 90 degrees.
+  // return 90.0f - 180.0f * angle / PI;
+
+  // Low power stuff.
+  constexpr int loops = 100;
+  int16_t raw_x, raw_y, raw_z;
+  float y = 0, z = 0;
+  float sum_angle = 0;
+  for (int i = 0; i < loops; i++) {
+    mpu_.getAcceleration(&raw_x, &raw_y, &raw_z);
+    y += raw_y;
+    z += raw_z;
+    sum_angle += 90 - 180.0f * atan2(y, z) / PI;
+
+    // Assumes wake-up frequency of 40 Hz.
+    delay(1.0f / 40);
   }
-
-  mpu_.dmpGetQuaternion(&quaternion_, fifo_buffer_);
-  VectorFloat z_rotated{0, 0, 1};
-  z_rotated.rotate(&quaternion_);
-
-  // This is the angle between the reference frame's z-axis and
-  // the IMU's's frame z-axis.
-  // cos(theta) = dot(u, v) / (mag(u) * mag(v))
-  float angle = acos(z_rotated.z / z_rotated.getMagnitude());
-
-  // To make this angle easier to interpret, we convention that 0 degrees
-  // should correspond to the sensor in the upright position (aligned with
-  // gravity). To do that, we just subtract the angle from 90 degrees.
-  return 90.0f - 180.0f * angle / PI;
+  // return 90 - 180.0f * atan2(y, z) / PI;
+  return sum_angle / loops;
 }
 
 IMU::Orientation IMU::GetOrientation() {

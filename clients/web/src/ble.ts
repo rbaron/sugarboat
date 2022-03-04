@@ -159,9 +159,9 @@ function onConnectRequest(
 
   function handleSensorService(service: BluetoothRemoteGATTService) {
     return Promise.all([
-      service
-        .getCharacteristic(kOrientationCharacteristicUUID)
-        .then(handleOrientationChar),
+      // service
+      //   .getCharacteristic(kOrientationCharacteristicUUID)
+      //   .then(handleOrientationChar),
       service
         .getCharacteristic(kSensorCharacteristicUUID)
         .then(handleSensorChar),

@@ -46,11 +46,14 @@ bool BLE::Init(Config& config, IMU& imu) {
   Bluefruit.setName("sugarboat");
   Bluefruit.Periph.setConnectCallback(ConnCallback);
   Bluefruit.Periph.setDisconnectCallback(DisconnCallback);
+  Bluefruit.Periph.setConnInterval(800, 1600);
+  // Bluefruit.Periph.setConnIntervalMS(1000, 2000);
+  // Bluefruit.Central.setConnIntervalMS(1000, 2000);
 
-  if (bleuart_.begin()) {
-    Serial.println("[ble] Error initializing BLE UART service");
-    return false;
-  }
+  // if (bleuart_.begin()) {
+  //   Serial.println("[ble] Error initializing BLE UART service");
+  //   return false;
+  // }
 
   // Init config service & characteristic.
   if (cfg_service_.begin()) {
@@ -73,12 +76,14 @@ bool BLE::Init(Config& config, IMU& imu) {
     return false;
   }
   sensor_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY);
+  // sensor_char_.setProperties(CHR_PROPS_READ);
   sensor_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
   if (sensor_char_.begin()) {
     Serial.println("[ble] Error initializing BLE sensor characteristic");
     return false;
   }
   orientation_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY);
+  // orientation_char_.setProperties(CHR_PROPS_READ);
   orientation_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
   if (orientation_char_.begin()) {
     Serial.println("[ble] Error initializing BLE orientation characteristic");
@@ -249,6 +254,14 @@ void BLE::ConnCallback(uint16_t conn_handle) {
   if (++ble.n_conns_ < kMaxConnections) {
     Bluefruit.Advertising.start(0);
   }
+
+  BLEConnection* conn = Bluefruit.Connection(conn_handle);
+  uint16_t conn_int = conn->getConnectionInterval();
+  Serial.printf("[ble] Connection interval: %d\n", conn_int);
+
+  // Request the connecting central to change the connection
+  conn->requestConnectionParameter(300);
+
   Serial.printf("[ble] Connection callback. #clients: %d\n", ble.n_conns_);
 }
 
