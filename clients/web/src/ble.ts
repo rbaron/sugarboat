@@ -32,6 +32,7 @@ export type Config = {
   has_coeffs: boolean;
   coeffs: Coeffs;
   name: string;
+  sleep_ms: number;
 };
 
 export type onConfig = (config: Config) => void;
@@ -73,6 +74,7 @@ function onConnectRequest(
   }
 
   function onConfigData(dataView: DataView) {
+    console.log("[ble config data] Raw: ", dataView);
     const str = String.fromCharCode.apply(
       null,
       // @ts-ignore
@@ -204,4 +206,19 @@ function setName(name: string) {
   return writeBleConfig(buffer);
 }
 
-export { onConnectRequest, calibrateIMU, setCoeffs, setRealtimeRun, setName };
+function setSleepMS(sleepMS: number) {
+  const buffer = new ArrayBuffer(3);
+  const view = new DataView(buffer);
+  view.setInt8(0, 0x05);
+  view.setUint16(1, sleepMS);
+  return writeBleConfig(buffer);
+}
+
+export {
+  onConnectRequest,
+  calibrateIMU,
+  setCoeffs,
+  setRealtimeRun,
+  setName,
+  setSleepMS,
+};

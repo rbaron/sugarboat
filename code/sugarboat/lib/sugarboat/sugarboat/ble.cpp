@@ -12,13 +12,16 @@ constexpr int kSensorCharProtocolVersion = 0;
 class StringStream : public Stream {
  public:
   int available() override {
-    return ptr - str_.size();
+    // return ptr - str_.size();
+    return 10;
   }
   int read() {
-    return str_[ptr++];
+    // return str_[ptr++];
+    return 'a';
   }
   int peek() {
-    return str_[ptr];
+    // return str_[ptr];
+    return 'a';
   }
   void flush() {}
 
@@ -37,6 +40,9 @@ class StringStream : public Stream {
 };
 
 bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
+  Serial.println("[ble config write] Raw config: ");
+  cfg.Serialize(Serial);
+
   StringStream config_stream;
   if (cfg.Serialize(config_stream) <= 0) {
     Serial.println("[ble] Wrote less than or equal 0 bytes of config\n");
@@ -44,6 +50,7 @@ bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
   }
 
   std::string& data = config_stream.GetString();
+  Serial.printf("[ble write to config] Will write: %s\n", data.c_str());
   size_t char_written = chr.write(data.c_str(), data.size());
   if (char_written < data.size()) {
     Serial.printf("[ble] Wrote %d bytes to config char and expected %d\n",
@@ -217,6 +224,7 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
       ble.config_->SetIMUOffsets(offsets);
       ble.config_->CommitToFlash();
       resumeLoop();
+      WriteToConfigChar(*ble.config_, ble.cfg_char_);
       return;
     }
     case 0x02: {
@@ -231,20 +239,38 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
       suspendLoop();
       ble.config_->CommitToFlash();
       resumeLoop();
+      WriteToConfigChar(*ble.config_, ble.cfg_char_);
       return;
     }
     case 0x03: {
       Serial.printf("[ble] Will set realtime run %d\n", data[1]);
       ble.config_->SetRealtimeRun(data[1] != 0);
+      WriteToConfigChar(*ble.config_, ble.cfg_char_);
       return;
     }
     case 0x04: {
       std::string name((char*)data + 1, len - 1);
-      Serial.printf("[ble] Will set name to: %s\n", name.c_str());
+      Serial.printf("[ble] Will set name to: %s (len %d)\n", name.c_str(),
+                    len - 1);
       ble.config_->SetName(name);
       suspendLoop();
       ble.config_->CommitToFlash();
       resumeLoop();
+      WriteToConfigChar(*ble.config_, ble.cfg_char_);
+      return;
+    }
+    case 0x05: {
+      uint16_t sleep_ms = data[1] << 8 | data[2];
+      Serial.printf("[ble] Will set sleep to: %d\n", sleep_ms);
+      suspendLoop();
+      ble.config_->SetSleepMS(sleep_ms);
+      ble.config_->CommitToFlash();
+      WriteToConfigChar(*ble.config_, ble.cfg_char_);
+      resumeLoop();
+
+      // uint8_t buff[512];
+      // ble.cfg_char_.read(buff, sizeof(buff));
+      // Serial.printf("[ble] Read new config: %s\n", buff);
       return;
     }
     default:

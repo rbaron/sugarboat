@@ -10,6 +10,7 @@ import {
   Coeffs,
   setRealtimeRun,
   setName,
+  setSleepMS,
 } from "./ble";
 // import Switch from "react-switch";
 import { Quaternion } from "three";
@@ -225,22 +226,43 @@ function EstimatesSection({ connected, sensorData }: EstimatesSectionProps) {
   );
 }
 type ConfigSectionProps = {
-  name: string;
   connected: boolean;
+  name: string;
   setName: (name: string) => void;
+  sleepMS: number;
+  setSleepMS: (sleepMS: number) => void;
 };
 
-function ConfigSection({ name, setName, connected }: ConfigSectionProps) {
+function ConfigSection({
+  name,
+  setName,
+  connected,
+  sleepMS,
+  setSleepMS,
+}: ConfigSectionProps) {
   const [nameState, setNameState] = useState(name);
+  const [sleepMSState, setSleepMSState] = useState(sleepMS);
 
   useEffect(() => {
     setNameState(name);
   }, [name]);
 
+  useEffect(() => {
+    setSleepMSState(sleepMS);
+  }, [sleepMS]);
+
   const setNameCB = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
       setNameState(value);
+    },
+    []
+  );
+
+  const setSleepMSCB = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setSleepMSState(parseInt(value));
     },
     []
   );
@@ -256,7 +278,21 @@ function ConfigSection({ name, setName, connected }: ConfigSectionProps) {
             disabled={!connected}
           />
           <button disabled={!connected} onClick={() => setName(nameState)}>
-            Update Name
+            Update
+          </button>
+        </ValueBox>
+        <ValueBox name="Sleep (ms)">
+          <input
+            type="text"
+            value={sleepMSState}
+            onChange={setSleepMSCB}
+            disabled={!connected}
+          />
+          <button
+            disabled={!connected}
+            onClick={() => setSleepMS(sleepMSState)}
+          >
+            Update
           </button>
         </ValueBox>
       </div>
@@ -286,6 +322,7 @@ function App() {
       a0: 0,
     },
     name: "",
+    sleep_ms: 0,
   });
 
   const [connected, setConnected] = useState(false);
@@ -324,6 +361,8 @@ function App() {
           <ConfigSection
             name={config.name}
             setName={setName}
+            sleepMS={config.sleep_ms}
+            setSleepMS={setSleepMS}
             connected={connected}
           />
           <CalibrationSection connected={connected} config={config} />

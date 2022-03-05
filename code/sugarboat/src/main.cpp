@@ -105,6 +105,6 @@ void loop() {
 
   if (!is_realtime) {
     Serial.printf("[main] Delaying...\n");
-    config.WaitForConfigChangeOrDelay(5000);
+    config.WaitForConfigChangeOrDelay();
   }
 }

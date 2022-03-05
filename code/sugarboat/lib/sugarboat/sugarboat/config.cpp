@@ -28,6 +28,7 @@ size_t Config::Serialize(Stream &stream) const {
   coeffs_obj["a2"] = coeffs_.a2;
 
   doc["name"] = name_;
+  doc["sleep_ms"] = sleep_ms_;
 
   return serializeJson(doc, stream);
 }
@@ -35,7 +36,7 @@ size_t Config::Serialize(Stream &stream) const {
 Config Config::Deserialize(Stream &stream) {
   Config config;
 
-  StaticJsonDocument<1024> doc;
+  StaticJsonDocument<2048> doc;
   DeserializationError status = deserializeJson(doc, stream);
   if (status != DeserializationError::Ok) {
     Serial.printf(
@@ -65,7 +66,12 @@ Config Config::Deserialize(Stream &stream) {
     config.imu_offsets.gyro_z = doc["imu_offsets"]["gyro_z"];
   }
 
-  config.name_ = doc["name"].as<std::string>();
+  if (doc.containsKey("name")) {
+    config.name_ = doc["name"].as<std::string>();
+  }
+  if (doc.containsKey("sleep_ms")) {
+    config.sleep_ms_ = doc["sleep_ms"];
+  }
 
   return config;
 }

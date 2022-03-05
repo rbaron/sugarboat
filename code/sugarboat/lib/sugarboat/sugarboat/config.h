@@ -26,8 +26,8 @@ class Config {
   bool CommitToFlash();
 
   // Returns true if the config has changed.
-  bool WaitForConfigChangeOrDelay(unsigned int delay_ms) {
-    if (xSemaphoreTake(x_config_semaphore_, pdMS_TO_TICKS(delay_ms))) {
+  bool WaitForConfigChangeOrDelay() {
+    if (xSemaphoreTake(x_config_semaphore_, pdMS_TO_TICKS(sleep_ms_))) {
       // Immediately give the semaphore back.
       xSemaphoreGive(x_config_semaphore_);
       Serial.println(
@@ -65,17 +65,7 @@ class Config {
 
   void SetRealtimeRun(bool value) {
     realtime_run_ = value;
-    xSemaphoreGive(x_config_semaphore_);
-    Serial.printf("[config] SetRealtimeRun gave semaphore: is inISR: %d\n",
-                  isInISR());
-    // Give some time for the main loop to run and take the semaphore.
-    delay(10);
-    if (!xSemaphoreTake(x_config_semaphore_, pdMS_TO_TICKS(100))) {
-      Serial.println(
-          "[config] ERROR SetRealtimeRun couldn't take the config sempahore");
-      return;
-    }
-    Serial.println("[config] SetRealtimeRun took semaphore again");
+    UnblockMainLoop();
   }
 
   bool GetRealtimeRun() {
@@ -90,10 +80,29 @@ class Config {
     name_ = name;
   }
 
+  void SetSleepMS(uint16_t sleep_ms) {
+    sleep_ms_ = sleep_ms;
+    UnblockMainLoop();
+  }
+
   size_t Serialize(Stream &stream) const;
 
  private:
   static Config Deserialize(Stream &stream);
+
+  void UnblockMainLoop() {
+    xSemaphoreGive(x_config_semaphore_);
+    Serial.printf("[config] SetRealtimeRun gave semaphore: is inISR: %d\n",
+                  isInISR());
+    // Give some time for the main loop to run and take the semaphore.
+    delay(10);
+    if (!xSemaphoreTake(x_config_semaphore_, pdMS_TO_TICKS(100))) {
+      Serial.println(
+          "[config] ERROR SetRealtimeRun couldn't take the config sempahore");
+      return;
+    }
+    Serial.println("[config] SetRealtimeRun took semaphore again");
+  }
 
   uint8_t version_ = 0;
   bool has_imu_offsets_ = false;
@@ -103,6 +112,10 @@ class Config {
   Coeffs coeffs_;
 
   std::string name_{"sugarboat"};
+
+  // How much to sleep in each iteration.
+  uint16_t sleep_ms_ = 10000;
+
   // Setting realtime_run_ to true will cause sensors to be read as fast as
   // possible and prevent any sort of power saving strategy. It's useful for
   // debugging and/or demos. This field is not persisted, as it should only
