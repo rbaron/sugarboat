@@ -1,5 +1,7 @@
 #include "sugarboat/ble.h"
 
+#include <string>
+
 #include "sugarboat/sensor_data.h"
 
 namespace sugarboat {
@@ -7,22 +9,54 @@ namespace {
 constexpr int kMaxConnections = 2;
 constexpr int kSensorCharProtocolVersion = 0;
 
+class StringStream : public Stream {
+ public:
+  int available() override {
+    return ptr - str_.size();
+  }
+  int read() {
+    return str_[ptr++];
+  }
+  int peek() {
+    return str_[ptr];
+  }
+  void flush() {}
+
+  size_t write(uint8_t byte) override {
+    str_ += byte;
+    return 1;
+  }
+
+  std::string& GetString() {
+    return str_;
+  }
+
+ private:
+  std::string str_;
+  size_t ptr = 0;
+};
+
 bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
-  uint8_t buf[kBuffSize] = {0x00};
-  size_t bytes_written = cfg.Serialize(buf, sizeof(buf));
-  if (bytes_written < 0) {
+  StringStream config_stream;
+  if (cfg.Serialize(config_stream) <= 0) {
+    Serial.println("[ble] Wrote less than or equal 0 bytes of config\n");
     return false;
   }
-  size_t char_written = chr.write(buf, bytes_written);
-  if (char_written < bytes_written) {
-    Serial.printf("[ble] Error writing to config char. Wrote %d, expected %d\n",
-                  char_written, bytes_written);
+
+  std::string& data = config_stream.GetString();
+  size_t char_written = chr.write(data.c_str(), data.size());
+  if (char_written < data.size()) {
+    Serial.printf("[ble] Wrote %d bytes to config char and expected %d\n",
+                  char_written, data.size());
     return false;
   }
+
+  Serial.printf("[ble] Wrote cfg to ble char: %s\n", data.c_str());
+
   // Maybe notify clients.
   for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
     if (Bluefruit.connected(conn_handler) && chr.notifyEnabled(conn_handler)) {
-      chr.notify(conn_handler, buf, sizeof(buf));
+      chr.notify(conn_handler, data.c_str(), data.size());
     }
   }
   return true;
@@ -61,7 +95,7 @@ bool BLE::Init(Config& config, IMU& imu) {
   cfg_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY | CHR_PROPS_WRITE);
   cfg_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
   cfg_char_.setWriteCallback(CfgCharWriteCallback);
-  cfg_char_.setMaxLen(64);
+  cfg_char_.setMaxLen(512);
   if (cfg_char_.begin()) {
     Serial.println("[ble] Error initializing BLE config characteristic");
     return false;

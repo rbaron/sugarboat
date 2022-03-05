@@ -28,8 +28,8 @@ export type Coeffs = {
 
 export type Config = {
   version: number;
-  hasIMUOffsets: boolean;
-  hasCoeffs: boolean;
+  has_imu_offsets: boolean;
+  has_coeffs: boolean;
   coeffs: Coeffs;
 };
 
@@ -72,23 +72,13 @@ function onConnectRequest(
   }
 
   function onConfigData(dataView: DataView) {
-    if (dataView.byteLength < 27) {
-      console.log(
-        "[ble config data] Received less bytes than expected: ",
-        dataView
-      );
-      return;
-    }
-    onConfig({
-      version: dataView.getInt8(0),
-      hasIMUOffsets: (dataView.getUint8(1) & 0x01) > 0,
-      hasCoeffs: (dataView.getUint8(1) & (0x01 << 1)) > 0,
-      coeffs: {
-        a2: dataView.getFloat32(15, true),
-        a1: dataView.getFloat32(19, true),
-        a0: dataView.getFloat32(23, true),
-      },
-    });
+    const str = String.fromCharCode.apply(
+      null,
+      // @ts-ignore
+      new Uint8Array(dataView.buffer)
+    );
+    const jsonCfg = JSON.parse(str);
+    return onConfig(jsonCfg);
   }
 
   function handleSensorChar(characteristic: BluetoothRemoteGATTCharacteristic) {

@@ -99,7 +99,7 @@ type CalibrationSectionProps = {
 };
 function CalibrationSection({
   connected,
-  config: { hasIMUOffsets, hasCoeffs, coeffs },
+  config: { has_imu_offsets, has_coeffs, coeffs },
 }: CalibrationSectionProps) {
   const [stateCoeffs, setStateCoeffs] = useState<Coeffs>(coeffs);
 
@@ -122,7 +122,7 @@ function CalibrationSection({
     if (!connected) {
       return <p style={{ fontSize: "2rem" }}>🤷‍♂️</p>;
     }
-    if (true || hasCoeffs) {
+    if (true || has_coeffs) {
       return (
         <table>
           <thead>
@@ -171,14 +171,14 @@ function CalibrationSection({
     } else {
       return null;
     }
-  }, [connected, hasCoeffs, stateCoeffs, onCoeffChange]);
+  }, [connected, has_coeffs, stateCoeffs, onCoeffChange]);
 
   const renderIMUOffsets = useCallback(() => {
     if (!connected) {
       return <p style={{ fontSize: "2rem" }}>🤷‍♂️</p>;
     }
-    return <p style={{ fontSize: "2rem" }}>{hasIMUOffsets ? "👌" : "👎"}</p>;
-  }, [connected, hasIMUOffsets]);
+    return <p style={{ fontSize: "2rem" }}>{has_imu_offsets ? "👌" : "👎"}</p>;
+  }, [connected, has_imu_offsets]);
 
   return (
     <div>
@@ -238,8 +238,8 @@ function App() {
 
   const [config, setConfig] = useState<Config>({
     version: 0,
-    hasIMUOffsets: false,
-    hasCoeffs: false,
+    has_imu_offsets: false,
+    has_coeffs: false,
     coeffs: {
       a2: 0,
       a1: 0,
