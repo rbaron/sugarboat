@@ -52,28 +52,10 @@ bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
   }
 
   Serial.printf("[ble] Wrote cfg to ble char: %s\n", data.c_str());
-  // uint8_t buf[kBuffSize] = {0x00};
-  // size_t bytes_written = cfg.Serialize(buf, sizeof(buf));
-  // if (bytes_written < 0) {
-  //   return false;
-  // }
-  // size_t char_written = chr.write(buf, bytes_written);
-  // if (char_written < bytes_written) {
-  //   Serial.printf("[ble] Error writing to config char. Wrote %d, expected
-  //   %d\n",
-  //                 char_written, bytes_written);
-  //   return false;
-  // }
-  // std::string out;
-  // String s;
-  // if (cfg.Serialize(out) <= 0) {
-  //   Serial.printf("[ble] Error writing cfg to ble characteristic.\n");
-  //   return false;
-  // }
+
   // Maybe notify clients.
   for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
     if (Bluefruit.connected(conn_handler) && chr.notifyEnabled(conn_handler)) {
-      // chr.notify(conn_handler, buf, sizeof(buf));
       chr.notify(conn_handler, data.c_str(), data.size());
     }
   }
@@ -277,7 +259,7 @@ void BLE::ConnCallback(uint16_t conn_handle) {
   // Note that this also dramatically increases the time it takes to stablish a
   // connection. This is surprising because I assumed this callback would only
   // be called _after_ the connection is fully stablished.
-  // conn->requestConnectionParameter(300);
+  conn->requestConnectionParameter(300);
 
   Serial.printf("[ble] Connection callback. #clients: %d\n", ble.n_conns_);
 }
