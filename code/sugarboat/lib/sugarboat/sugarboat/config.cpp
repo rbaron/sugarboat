@@ -10,34 +10,6 @@ constexpr char kConfigFilename[] = "config-test.json";
 }  // namespace
 
 size_t Config::Serialize(Stream &stream) const {
-  //   if (buf_size != kBuffSize) {
-  //     Serial.printf(
-  //         "[config] Serialization buffer size does not match. Had %d, needed
-  //         "
-  //         "%d\n",
-  //         buf_size, kBuffSize);
-  //   }
-
-  //   size_t offset = 0;
-  //   buf[offset++] = version_;
-
-  //   // Bytes 1.
-  //   buf[1] |= has_imu_offsets_ ? 1 : 0;
-  //   buf[1] |= has_coeffs_ ? 1 << 1 : 0;
-  //   offset += 1;
-
-  //   // Byte 2 is reserved.
-  //   offset += 1;
-
-  //   // IMU offsets.
-  //   memcpy(buf + offset, &imu_offsets, sizeof(imu_offsets));
-  //   offset += sizeof(imu_offsets);
-
-  //   // Coefficients.
-  //   memcpy(buf + offset, &coeffs_, sizeof(coeffs_));
-  //   offset += sizeof(coeffs_);
-
-  //   return offset;
   StaticJsonDocument<1024> doc;
   doc["version"] = version_;
   doc["has_imu_offsets"] = has_imu_offsets_;
@@ -56,10 +28,6 @@ size_t Config::Serialize(Stream &stream) const {
   coeffs_obj["a2"] = coeffs_.a2;
 
   return serializeJson(doc, stream);
-  // Serial.printf("[config] ");
-  // serializeJsonPretty(doc, Serial);
-  // Serial.println();
-  // return 1;
 }
 
 Config Config::Deserialize(Stream &stream) {
