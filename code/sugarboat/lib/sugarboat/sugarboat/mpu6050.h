@@ -18,24 +18,6 @@ class IMU {
     int16_t gyro_z = 0;
   };
 
-  struct IMUQuaternion {
-    float w;
-    float x;
-    float y;
-    float z;
-  };
-
-  struct EulerAngles {
-    float psi;
-    float theta;
-    float phi;
-  };
-
-  struct Orientation {
-    IMUQuaternion quaternion;
-    EulerAngles euler_angles;
-  };
-
   IMU() {}
   IMU(const IMU &other) = delete;
   IMU &operator=(const IMU &other) = delete;
@@ -46,12 +28,9 @@ class IMU {
   void WakeUp();
   Offsets Calibrate();
   float GetTilt();
-  Orientation GetOrientation();
 
  private:
   MPU6050 mpu_;
-  uint8_t fifo_buffer_[64];
-  Quaternion quaternion_;
 };
 }  // namespace sugarboat
 #endif  // _SUGARBOAT_MPU6050_H_

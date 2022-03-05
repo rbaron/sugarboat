@@ -11,9 +11,6 @@ int InitMPULowPower(MPU6050& mpu) {
   // Disable DMP.
   mpu.setDMPEnabled(false);
 
-  // Enable FIFO.
-  // mpu.setFIFOEnabled(true);
-
   // Disable temp sensor.
   mpu.setTempSensorEnabled(false);
 
@@ -50,20 +47,6 @@ int InitMPULowPower(MPU6050& mpu) {
 
   return 0;
 }
-
-int InitMPUDMPMode(MPU6050& mpu) {
-  // The MPU6050's mysterious DMP processor needs its firmware
-  // written every time it's powered on.
-  if (mpu.dmpInitialize()) {
-    Serial.printf("[imu] Failed to initialize DMP\n");
-    return 1;
-  }
-
-  mpu.setIntDataReadyEnabled(true);
-  mpu.setDMPEnabled(true);
-
-  return 0;
-}
 }  // namespace
 
 int IMU::Init(const Offsets& offsets) {
@@ -75,19 +58,6 @@ int IMU::Init(const Offsets& offsets) {
     return 1;
   }
 
-  // The MPU6050's mysterious DMP processor needs its firmware
-  // written every time it's powered on.
-  // if (mpu_.dmpInitialize()) {
-  //   Serial.printf("[imu] Failed to initialize DMP\n");
-  //   return 1;
-  // }
-
-  // mpu_.setIntDataReadyEnabled(true);
-
-  // mpu_.setDMPEnabled(true);
-
-  // mpu_.setDMPEnabled(false);
-
   mpu_.setXAccelOffset(offsets.accel_x);
   mpu_.setYAccelOffset(offsets.accel_y);
   mpu_.setZAccelOffset(offsets.accel_z);
@@ -96,7 +66,6 @@ int IMU::Init(const Offsets& offsets) {
   mpu_.setZGyroOffset(offsets.gyro_z);
 
   InitMPULowPower(mpu_);
-  // InitMPUDMPMode(mpu_);
 
   Serial.printf("[imu] Initialized!\n");
   return 0;
@@ -107,13 +76,11 @@ int IMU::DeInit() {
 }
 
 void IMU::Sleep() {
-  // mpu_.setDMPEnabled(false);
   mpu_.setSleepEnabled(true);
 }
 
 void IMU::WakeUp() {
   mpu_.setSleepEnabled(false);
-  // mpu_.setDMPEnabled(true);
 }
 
 IMU::Offsets IMU::Calibrate() {
@@ -140,30 +107,6 @@ IMU::Offsets IMU::Calibrate() {
 }
 
 float IMU::GetTilt() {
-  // DMP stuff.
-  // while (!mpu_.getFIFOCount())
-  //   ;
-
-  // if (!mpu_.dmpGetCurrentFIFOPacket(fifo_buffer_)) {
-  //   Serial.println("[imu] Unable to get packet from fifo buffer");
-  //   return 0.0f;
-  // }
-
-  // mpu_.dmpGetQuaternion(&quaternion_, fifo_buffer_);
-  // VectorFloat z_rotated{0, 0, 1};
-  // z_rotated.rotate(&quaternion_);
-
-  // // This is the angle between the reference frame's z-axis and
-  // // the IMU's's frame z-axis.
-  // // cos(theta) = dot(u, v) / (mag(u) * mag(v))
-  // float angle = acos(z_rotated.z / z_rotated.getMagnitude());
-
-  // // To make this angle easier to interpret, we convention that 0 degrees
-  // // should correspond to the sensor in the upright position (aligned with
-  // // gravity). To do that, we just subtract the angle from 90 degrees.
-  // return 90.0f - 180.0f * angle / PI;
-
-  // Low power stuff.
   constexpr int loops = 100;
   int16_t raw_x, raw_y, raw_z;
   float y = 0, z = 0;
@@ -177,39 +120,7 @@ float IMU::GetTilt() {
     // Assumes wake-up frequency of 40 Hz.
     delay(1.0f / 40);
   }
-  // return 90 - 180.0f * atan2(y, z) / PI;
   return sum_angle / loops;
-}
-
-IMU::Orientation IMU::GetOrientation() {
-  while (!mpu_.getFIFOCount())
-    ;
-
-  Orientation orientation;
-
-  if (!mpu_.dmpGetCurrentFIFOPacket(fifo_buffer_)) {
-    Serial.println("[imu] Unable to get packet from fifo buffer");
-    return orientation;
-  }
-
-  if (mpu_.dmpGetQuaternion(&quaternion_, fifo_buffer_)) {
-    Serial.println("[imu] Error in dmpGetQuaternion");
-    return orientation;
-  }
-  orientation.quaternion.w = quaternion_.w;
-  orientation.quaternion.x = quaternion_.x;
-  orientation.quaternion.y = quaternion_.y;
-  orientation.quaternion.z = quaternion_.z;
-
-  if (mpu_.dmpGetEuler((float*)&orientation.euler_angles, &quaternion_)) {
-    Serial.println("[imu] Error in dmpGetEuler");
-    return orientation;
-  }
-  orientation.euler_angles.psi *= 180.0f / PI;
-  orientation.euler_angles.theta *= 180.0f / PI;
-  orientation.euler_angles.phi *= 180.0f / PI;
-
-  return orientation;
 }
 
 }  // namespace sugarboat

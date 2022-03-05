@@ -47,8 +47,6 @@ bool BLE::Init(Config& config, IMU& imu) {
   Bluefruit.Periph.setConnectCallback(ConnCallback);
   Bluefruit.Periph.setDisconnectCallback(DisconnCallback);
   Bluefruit.Periph.setConnInterval(800, 1600);
-  // Bluefruit.Periph.setConnIntervalMS(1000, 2000);
-  // Bluefruit.Central.setConnIntervalMS(1000, 2000);
 
   // if (bleuart_.begin()) {
   //   Serial.println("[ble] Error initializing BLE UART service");
@@ -76,17 +74,9 @@ bool BLE::Init(Config& config, IMU& imu) {
     return false;
   }
   sensor_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY);
-  // sensor_char_.setProperties(CHR_PROPS_READ);
   sensor_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
   if (sensor_char_.begin()) {
     Serial.println("[ble] Error initializing BLE sensor characteristic");
-    return false;
-  }
-  orientation_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY);
-  // orientation_char_.setProperties(CHR_PROPS_READ);
-  orientation_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-  if (orientation_char_.begin()) {
-    Serial.println("[ble] Error initializing BLE orientation characteristic");
     return false;
   }
 
@@ -172,34 +162,6 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
   return true;
 }
 
-bool BLE::InjectOrientationData(const IMU::Orientation& orientation) {
-  uint8_t buf[14];
-  Encode16BitFloat<int16_t>(orientation.quaternion.w, buf, 0, 1000);
-  Encode16BitFloat<int16_t>(orientation.quaternion.x, buf, 2, 1000);
-  Encode16BitFloat<int16_t>(orientation.quaternion.y, buf, 4, 1000);
-  Encode16BitFloat<int16_t>(orientation.quaternion.z, buf, 6, 1000);
-
-  Encode16BitFloat<int16_t>(orientation.euler_angles.psi, buf, 8, 100);
-  Encode16BitFloat<int16_t>(orientation.euler_angles.theta, buf, 10, 100);
-  Encode16BitFloat<int16_t>(orientation.euler_angles.phi, buf, 12, 100);
-
-  uint16_t written_len = orientation_char_.write(buf, sizeof(buf));
-  if (written_len < sizeof(buf)) {
-    Serial.printf(
-        "[ble] Did not write enough bytes to orientation characteristic\n");
-    return false;
-  }
-
-  // Maybe notify clients.
-  for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
-    if (Bluefruit.connected(conn_handler) &&
-        orientation_char_.notifyEnabled(conn_handler)) {
-      orientation_char_.notify(conn_handler, buf, sizeof(buf));
-    }
-  }
-  return true;
-}
-
 void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
                                uint8_t* data, uint16_t len) {
   BLE& ble = BLE::GetInstance();
@@ -259,7 +221,10 @@ void BLE::ConnCallback(uint16_t conn_handle) {
   uint16_t conn_int = conn->getConnectionInterval();
   Serial.printf("[ble] Connection interval: %d\n", conn_int);
 
-  // Request the connecting central to change the connection
+  // Request the connecting central to change the connection.
+  // Note that this also dramatically increases the time it takes to stablish a
+  // connection. This is surprising because I assumed this callback would only
+  // be called _after_ the connection is fully stablished.
   conn->requestConnectionParameter(300);
 
   Serial.printf("[ble] Connection callback. #clients: %d\n", ble.n_conns_);

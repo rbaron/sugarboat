@@ -18,7 +18,7 @@ sugarboat::SHT30 sht30;
 
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
-#define LED_BUILTIN2 16
+#define SGRBT_LED_PIN 16
 #define SGRBT_SDA_PIN 6
 #define SGRBT_SCL_PIN 10
 #define SGRBT_BAT_SEN_PIN 18
@@ -31,9 +31,9 @@ void setup() {
   // Uses ~40uA!
   // pinMode(SGRBT_BAT_SEN_PIN, INPUT);
 
-  pinMode(LED_BUILTIN2, OUTPUT);
+  pinMode(SGRBT_LED_PIN, OUTPUT);
 
-  digitalWrite(LED_BUILTIN2, HIGH);
+  digitalWrite(SGRBT_LED_PIN, HIGH);
 
   Wire.setPins(SGRBT_SDA_PIN, SGRBT_SCL_PIN);
   Wire.begin();
@@ -72,7 +72,7 @@ void setup() {
   delay(100);
   ble.StartAdv();
 
-  digitalWrite(LED_BUILTIN2, LOW);
+  digitalWrite(SGRBT_LED_PIN, LOW);
 }
 
 sugarboat::SensorData sensor_data{0, 0, 0, 0};
@@ -80,24 +80,7 @@ void loop() {
   bool is_realtime = config.GetRealtimeRun();
 
   imu.WakeUp();
-  // // if (!is_realtime) {
-  // //   Serial.printf("[main] Waking up IMU...\n");
-  // //   // TODO: Better strategy for waiting IMU values to converge.
-  // //   if (config.WaitForConfigChangeOrDelay(10000)) {
-  // //     return;
-  // //   }
-  // // }
-
-  // // sugarboat::IMU::Orientation orientation = imu.GetOrientation();
   sensor_data.tilt_degrees = imu.GetTilt();
-  // // Serial.printf("[main] Tilt: %.2f\n", sensor_data.tilt_degrees);
-
-  // // if (!is_realtime) {
-  // //   Serial.printf("[main] Sleeping IMU...\n");
-  // //   imu.Sleep();
-  // // }
-
-  // // ble.InjectOrientationData(orientation);
   imu.Sleep();
 
   float batt_v = 2 * 3.6f * analogRead(SGRBT_BAT_SEN_PIN) / 1024.0f;
