@@ -5,7 +5,6 @@ import {
   calibrateIMU,
   onConnectRequest,
   setCoeffs,
-  Orientation,
   Config,
   SensorData,
   Coeffs,
@@ -226,14 +225,7 @@ function EstimatesSection({ connected, sensorData }: EstimatesSectionProps) {
 }
 
 function App() {
-  const [orientation, setOrientation] = useState<Orientation>({
-    quaternion: new Quaternion(),
-    eulerAngles: {
-      psi: 0,
-      theta: 0,
-      phi: 0,
-    },
-  });
+  const orientation = useState<Quaternion>(new Quaternion());
 
   const [sensorData, setSensorData] = useState<SensorData>({
     angle: 0,
@@ -270,15 +262,6 @@ function App() {
 
   const onConfig = useCallback(
     (config: Config) => {
-      // console.log(
-      //   "Version",
-      //   config.version,
-      //   "hasImu",
-      //   config.hasIMUOffsets,
-      //   "hasCoeff",
-      //   config.hasCoeffs,
-      //   config.coeffs
-      // );
       setConfig(config);
     },
     [setConfig]
@@ -286,13 +269,7 @@ function App() {
 
   // @ts-ignore
   const onConnectClickCB = useCallback(
-    onConnectRequest(
-      onConnect,
-      onDisconnect,
-      setOrientation,
-      onSensorData,
-      onConfig
-    ),
+    onConnectRequest(onConnect, onDisconnect, onSensorData, onConfig),
     []
   );
 
@@ -306,7 +283,7 @@ function App() {
           <EstimatesSection connected={connected} sensorData={sensorData} />
         </div>
         <div className="Container-right">
-          <Model orientation={orientation.quaternion} />
+          <Model orientation={orientation[0]} />
         </div>
       </div>
     </div>

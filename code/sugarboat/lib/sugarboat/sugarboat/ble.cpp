@@ -46,11 +46,12 @@ bool BLE::Init(Config& config, IMU& imu) {
   Bluefruit.setName("sugarboat");
   Bluefruit.Periph.setConnectCallback(ConnCallback);
   Bluefruit.Periph.setDisconnectCallback(DisconnCallback);
+  Bluefruit.Periph.setConnInterval(800, 1600);
 
-  if (bleuart_.begin()) {
-    Serial.println("[ble] Error initializing BLE UART service");
-    return false;
-  }
+  // if (bleuart_.begin()) {
+  //   Serial.println("[ble] Error initializing BLE UART service");
+  //   return false;
+  // }
 
   // Init config service & characteristic.
   if (cfg_service_.begin()) {
@@ -78,12 +79,6 @@ bool BLE::Init(Config& config, IMU& imu) {
     Serial.println("[ble] Error initializing BLE sensor characteristic");
     return false;
   }
-  orientation_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY);
-  orientation_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-  if (orientation_char_.begin()) {
-    Serial.println("[ble] Error initializing BLE orientation characteristic");
-    return false;
-  }
 
   ble_gap_addr_t addr = Bluefruit.getAddr();
   Serial.printf("[ble] MAC Address: ");
@@ -107,7 +102,8 @@ bool BLE::StartAdv() {
   // Advertisement interval in units of 625 us. For estimating impact in battery
   // life, use
   // https://devzone.nordicsemi.com/nordic/power/w/opp/2/online-power-profiler-for-ble.
-  Bluefruit.Advertising.setInterval(32, 244);
+  // Bluefruit.Advertising.setInterval(32, 244);
+  Bluefruit.Advertising.setInterval(32, 3200);
   Bluefruit.Advertising.setFastTimeout(1);
   Bluefruit.Advertising.start(0);
 
@@ -161,34 +157,6 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
     if (Bluefruit.connected(conn_handler) &&
         sensor_char_.notifyEnabled(conn_handler)) {
       sensor_char_.notify(conn_handler, buf, sizeof(buf));
-    }
-  }
-  return true;
-}
-
-bool BLE::InjectOrientationData(const IMU::Orientation& orientation) {
-  uint8_t buf[14];
-  Encode16BitFloat<int16_t>(orientation.quaternion.w, buf, 0, 1000);
-  Encode16BitFloat<int16_t>(orientation.quaternion.x, buf, 2, 1000);
-  Encode16BitFloat<int16_t>(orientation.quaternion.y, buf, 4, 1000);
-  Encode16BitFloat<int16_t>(orientation.quaternion.z, buf, 6, 1000);
-
-  Encode16BitFloat<int16_t>(orientation.euler_angles.psi, buf, 8, 100);
-  Encode16BitFloat<int16_t>(orientation.euler_angles.theta, buf, 10, 100);
-  Encode16BitFloat<int16_t>(orientation.euler_angles.phi, buf, 12, 100);
-
-  uint16_t written_len = orientation_char_.write(buf, sizeof(buf));
-  if (written_len < sizeof(buf)) {
-    Serial.printf(
-        "[ble] Did not write enough bytes to orientation characteristic\n");
-    return false;
-  }
-
-  // Maybe notify clients.
-  for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
-    if (Bluefruit.connected(conn_handler) &&
-        orientation_char_.notifyEnabled(conn_handler)) {
-      orientation_char_.notify(conn_handler, buf, sizeof(buf));
     }
   }
   return true;
@@ -248,6 +216,17 @@ void BLE::ConnCallback(uint16_t conn_handle) {
   if (++ble.n_conns_ < kMaxConnections) {
     Bluefruit.Advertising.start(0);
   }
+
+  BLEConnection* conn = Bluefruit.Connection(conn_handle);
+  uint16_t conn_int = conn->getConnectionInterval();
+  Serial.printf("[ble] Connection interval: %d\n", conn_int);
+
+  // Request the connecting central to change the connection.
+  // Note that this also dramatically increases the time it takes to stablish a
+  // connection. This is surprising because I assumed this callback would only
+  // be called _after_ the connection is fully stablished.
+  conn->requestConnectionParameter(300);
+
   Serial.printf("[ble] Connection callback. #clients: %d\n", ble.n_conns_);
 }
 
