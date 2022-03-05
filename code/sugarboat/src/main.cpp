@@ -41,8 +41,8 @@ void setup() {
 
   Serial.begin(115200);
   // Uncomment to block the execution until the USB serial port is open.
-  // while (!Serial)
-  //   ;
+  while (!Serial)
+    ;
   delay(500);
 
   if (!sht30.Init()) {

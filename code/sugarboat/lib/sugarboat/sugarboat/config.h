@@ -80,10 +80,10 @@ class Config {
     return realtime_run_;
   }
 
-  size_t Serialize(uint8_t *buf, size_t buf_size) const;
+  size_t Serialize(Stream &stream) const;
 
  private:
-  static Config Deserialize(uint8_t *buf, size_t buff_size);
+  static Config Deserialize(Stream &stream);
 
   uint8_t version_ = 0;
   bool has_imu_offsets_ = false;

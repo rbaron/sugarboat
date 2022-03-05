@@ -91,6 +91,8 @@ IMU::Offsets IMU::Calibrate() {
   mpu_.setYGyroOffset(0);
   mpu_.setZGyroOffset(0);
 
+  WakeUp();
+
   mpu_.CalibrateAccel(10);
   mpu_.CalibrateGyro(10);
   mpu_.PrintActiveOffsets();

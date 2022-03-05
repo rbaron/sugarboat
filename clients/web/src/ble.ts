@@ -28,8 +28,10 @@ export type Coeffs = {
 
 export type Config = {
   version: number;
-  hasIMUOffsets: boolean;
-  hasCoeffs: boolean;
+  // hasIMUOffsets: boolean;
+  // hasCoeffs: boolean;
+  has_imu_offsets: boolean;
+  has_coeffs: boolean;
   coeffs: Coeffs;
 };
 
@@ -72,23 +74,37 @@ function onConnectRequest(
   }
 
   function onConfigData(dataView: DataView) {
-    if (dataView.byteLength < 27) {
-      console.log(
-        "[ble config data] Received less bytes than expected: ",
-        dataView
-      );
-      return;
-    }
-    onConfig({
-      version: dataView.getInt8(0),
-      hasIMUOffsets: (dataView.getUint8(1) & 0x01) > 0,
-      hasCoeffs: (dataView.getUint8(1) & (0x01 << 1)) > 0,
-      coeffs: {
-        a2: dataView.getFloat32(15, true),
-        a1: dataView.getFloat32(19, true),
-        a0: dataView.getFloat32(23, true),
-      },
-    });
+    // console.log("[ble config data] Received: ", dataView, JSON.parse(dataView.buffer, ));
+    // Parse received data into a JSON object.
+    // const str = String.fromCharCode.apply(null, new Uint8Array([]));
+    // const buf = dataView.buffer;
+    // const aa = new Uint8Array(buf);
+    // const str = String.fromCharCode.apply(null, aa);
+    const str = String.fromCharCode.apply(
+      null,
+      // @ts-ignore
+      new Uint8Array(dataView.buffer)
+    );
+    const jsonCfg = JSON.parse(str);
+    console.log("[ble config data] Got: ", str, jsonCfg);
+    // if (dataView.byteLength < 27) {
+    //   console.log(
+    //     "[ble config data] Received less bytes than expected: ",
+    //     dataView
+    //   );
+    //   return;
+    // }
+    // onConfig({
+    //   version: dataView.getInt8(0),
+    //   hasIMUOffsets: (dataView.getUint8(1) & 0x01) > 0,
+    //   hasCoeffs: (dataView.getUint8(1) & (0x01 << 1)) > 0,
+    //   coeffs: {
+    //     a2: dataView.getFloat32(15, true),
+    //     a1: dataView.getFloat32(19, true),
+    //     a0: dataView.getFloat32(23, true),
+    //   },
+    // });
+    return onConfig(jsonCfg);
   }
 
   function handleSensorChar(characteristic: BluetoothRemoteGATTCharacteristic) {
