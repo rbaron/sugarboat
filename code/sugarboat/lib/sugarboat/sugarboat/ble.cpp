@@ -77,7 +77,7 @@ bool BLE::Init(Config& config, IMU& imu) {
 
   Bluefruit.setTxPower(0);
 
-  Bluefruit.setName("sugarboat");
+  Bluefruit.setName(config.GetName().c_str());
   Bluefruit.Periph.setConnectCallback(ConnCallback);
   Bluefruit.Periph.setDisconnectCallback(DisconnCallback);
   Bluefruit.Periph.setConnInterval(800, 1600);
@@ -236,6 +236,15 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
     case 0x03: {
       Serial.printf("[ble] Will set realtime run %d\n", data[1]);
       ble.config_->SetRealtimeRun(data[1] != 0);
+      return;
+    }
+    case 0x04: {
+      std::string name((char*)data + 1, len - 1);
+      Serial.printf("[ble] Will set name to: %s\n", name.c_str());
+      ble.config_->SetName(name);
+      suspendLoop();
+      ble.config_->CommitToFlash();
+      resumeLoop();
       return;
     }
     default:

@@ -9,6 +9,7 @@ import {
   SensorData,
   Coeffs,
   setRealtimeRun,
+  setName,
 } from "./ble";
 // import Switch from "react-switch";
 import { Quaternion } from "three";
@@ -223,6 +224,45 @@ function EstimatesSection({ connected, sensorData }: EstimatesSectionProps) {
     </div>
   );
 }
+type ConfigSectionProps = {
+  name: string;
+  connected: boolean;
+  setName: (name: string) => void;
+};
+
+function ConfigSection({ name, setName, connected }: ConfigSectionProps) {
+  const [nameState, setNameState] = useState(name);
+
+  useEffect(() => {
+    setNameState(name);
+  }, [name]);
+
+  const setNameCB = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setNameState(value);
+    },
+    []
+  );
+  return (
+    <div>
+      <h1>Config</h1>
+      <div className="ValueBoxes-container">
+        <ValueBox name="Name">
+          <input
+            type="text"
+            value={nameState}
+            onChange={setNameCB}
+            disabled={!connected}
+          />
+          <button disabled={!connected} onClick={() => setName(nameState)}>
+            Update Name
+          </button>
+        </ValueBox>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const orientation = useState<Quaternion>(new Quaternion());
@@ -245,6 +285,7 @@ function App() {
       a1: 0,
       a0: 0,
     },
+    name: "",
   });
 
   const [connected, setConnected] = useState(false);
@@ -279,8 +320,13 @@ function App() {
       <div className="Container">
         <div className="Container-left">
           <DataSection sensorData={sensorData} />
-          <CalibrationSection connected={connected} config={config} />
           <EstimatesSection connected={connected} sensorData={sensorData} />
+          <ConfigSection
+            name={config.name}
+            setName={setName}
+            connected={connected}
+          />
+          <CalibrationSection connected={connected} config={config} />
         </div>
         <div className="Container-right">
           <Model orientation={orientation[0]} />

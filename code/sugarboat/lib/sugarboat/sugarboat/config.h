@@ -3,6 +3,8 @@
 
 #include <Adafruit_LittleFS.h>
 
+#include <string>
+
 #include "sugarboat/mpu6050.h"
 #include "sugarboat/sugar_scale.h"
 
@@ -80,6 +82,14 @@ class Config {
     return realtime_run_;
   }
 
+  const std::string &GetName() const {
+    return name_;
+  }
+
+  void SetName(const std::string name) {
+    name_ = name;
+  }
+
   size_t Serialize(Stream &stream) const;
 
  private:
@@ -92,6 +102,7 @@ class Config {
   bool has_coeffs_ = false;
   Coeffs coeffs_;
 
+  std::string name_{"sugarboat"};
   // Setting realtime_run_ to true will cause sensors to be read as fast as
   // possible and prevent any sort of power saving strategy. It's useful for
   // debugging and/or demos. This field is not persisted, as it should only

@@ -31,6 +31,7 @@ export type Config = {
   has_imu_offsets: boolean;
   has_coeffs: boolean;
   coeffs: Coeffs;
+  name: string;
 };
 
 export type onConfig = (config: Config) => void;
@@ -78,6 +79,7 @@ function onConnectRequest(
       new Uint8Array(dataView.buffer)
     );
     const jsonCfg = JSON.parse(str);
+    console.log("[ble] Config: ", jsonCfg);
     return onConfig(jsonCfg);
   }
 
@@ -191,4 +193,15 @@ function setRealtimeRun(value: boolean) {
   return writeBleConfig(buffer);
 }
 
-export { onConnectRequest, calibrateIMU, setCoeffs, setRealtimeRun };
+function setName(name: string) {
+  const buffer = new ArrayBuffer(name.length + 1);
+  const view = new Uint8Array(buffer);
+  view[0] = 0x04;
+  for (let i = 0; i < name.length; i++) {
+    // Will most likely break with non-ASCII chars.
+    view[i + 1] = name.charCodeAt(i);
+  }
+  return writeBleConfig(buffer);
+}
+
+export { onConnectRequest, calibrateIMU, setCoeffs, setRealtimeRun, setName };

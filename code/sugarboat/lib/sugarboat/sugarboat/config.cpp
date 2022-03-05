@@ -27,6 +27,8 @@ size_t Config::Serialize(Stream &stream) const {
   coeffs_obj["a1"] = coeffs_.a1;
   coeffs_obj["a2"] = coeffs_.a2;
 
+  doc["name"] = name_;
+
   return serializeJson(doc, stream);
 }
 
@@ -62,6 +64,9 @@ Config Config::Deserialize(Stream &stream) {
     config.imu_offsets.gyro_y = doc["imu_offsets"]["gyro_y"];
     config.imu_offsets.gyro_z = doc["imu_offsets"]["gyro_z"];
   }
+
+  config.name_ = doc["name"].as<std::string>();
+
   return config;
 }
 

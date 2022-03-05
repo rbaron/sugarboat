@@ -150,3 +150,7 @@ img.Logo {
   font-family: "VT323", monospace;
   margin: var(--margin);
 }
+
+input {
+  margin: var(--margin);
+}
