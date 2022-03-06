@@ -80,6 +80,7 @@ function onConnectRequest(
       // @ts-ignore
       new Uint8Array(dataView.buffer)
     );
+    console.log("[ble config data] Str: ", str);
     const jsonCfg = JSON.parse(str);
     console.log("[ble] Config: ", jsonCfg);
     return onConfig(jsonCfg);
@@ -214,6 +215,13 @@ function setSleepMS(sleepMS: number) {
   return writeBleConfig(buffer);
 }
 
+function reset() {
+  const buffer = new ArrayBuffer(1);
+  const view = new DataView(buffer);
+  view.setInt8(0, 0x06);
+  return writeBleConfig(buffer);
+}
+
 export {
   onConnectRequest,
   calibrateIMU,
@@ -221,4 +229,5 @@ export {
   setRealtimeRun,
   setName,
   setSleepMS,
+  reset,
 };

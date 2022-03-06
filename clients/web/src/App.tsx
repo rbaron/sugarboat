@@ -11,6 +11,7 @@ import {
   setRealtimeRun,
   setName,
   setSleepMS,
+  reset,
 } from "./ble";
 // import Switch from "react-switch";
 import { Quaternion } from "three";
@@ -293,6 +294,11 @@ function ConfigSection({
             onClick={() => setSleepMS(sleepMSState)}
           >
             Update
+          </button>
+        </ValueBox>
+        <ValueBox name="Reset">
+          <button disabled={!connected} onClick={reset}>
+            Reset
           </button>
         </ValueBox>
       </div>

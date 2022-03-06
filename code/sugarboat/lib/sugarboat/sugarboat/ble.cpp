@@ -1,5 +1,7 @@
 #include "sugarboat/ble.h"
 
+#include <nrf_nvic.h>
+
 #include <string>
 
 #include "sugarboat/sensor_data.h"
@@ -271,6 +273,10 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
       // uint8_t buff[512];
       // ble.cfg_char_.read(buff, sizeof(buff));
       // Serial.printf("[ble] Read new config: %s\n", buff);
+      return;
+    }
+    case 0x06: {
+      sd_nvic_SystemReset();
       return;
     }
     default:
