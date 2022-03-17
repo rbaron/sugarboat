@@ -5,11 +5,13 @@ namespace sugarboat {
 
 struct SensorData {
   float tilt_degrees;
-  float temp_celcius;
+  float temp_celsius;
   // Relative humidity in [0.0, 1.0].
   float rel_humi;
   // Battery voltage in Volts.
   float batt_volt;
+  // MPU6050's temperature.
+  float mpu_temp_celsius;
 };
 
 }  // namespace sugarboat

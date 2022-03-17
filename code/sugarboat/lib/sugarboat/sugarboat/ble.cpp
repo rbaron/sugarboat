@@ -161,7 +161,7 @@ inline static void Encode16BitFloat(float val, uint8_t* buf, size_t idx,
 }
 
 bool BLE::InjectSensorData(const SensorData& sensor_data) {
-  uint8_t buf[14];
+  uint8_t buf[16];
 
   // Byte 0
   //   Bits 0-3: Protocol version.
@@ -179,14 +179,17 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
   // Bytes 6 - 7: specific gravity ("SG" scale).
   Encode16BitFloat<uint16_t>(BrixToSG(brix), buf, 6, 1000);
 
-  // Bytes 8 - 9: temp in Celcius * 100.
-  Encode16BitFloat<int16_t>(sensor_data.temp_celcius, buf, 8, 100);
+  // Bytes 8 - 9: temp in Celsius * 100.
+  Encode16BitFloat<int16_t>(sensor_data.temp_celsius, buf, 8, 100);
 
   // Bytes 10 - 11: relative humidity in range [0, UINT16_MAX].
   Encode16BitFloat<uint16_t>(sensor_data.rel_humi / 100, buf, 10, UINT16_MAX);
 
   // Bytes 12 - 13: batt voltage * 1000.
   Encode16BitFloat<uint16_t>(sensor_data.batt_volt, buf, 12, 1000);
+
+  // Bytes 14 - 15: MPU6050's temp in Celsius * 100.
+  Encode16BitFloat<int16_t>(sensor_data.mpu_temp_celsius, buf, 14, 100);
 
   uint16_t written_len = sensor_char_.write(buf, sizeof(buf));
   if (written_len < sizeof(buf)) {
@@ -269,10 +272,6 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
       ble.config_->CommitToFlash();
       WriteToConfigChar(*ble.config_, ble.cfg_char_);
       resumeLoop();
-
-      // uint8_t buff[512];
-      // ble.cfg_char_.read(buff, sizeof(buff));
-      // Serial.printf("[ble] Read new config: %s\n", buff);
       return;
     }
     case 0x06: {

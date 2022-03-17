@@ -25,8 +25,9 @@ import Switch from "./Switch";
 type HeaderProps = {
   connected: boolean;
   onConnectClick: () => void;
+  name: string;
 };
-function Header({ connected, onConnectClick }: HeaderProps) {
+function Header({ connected, onConnectClick, name }: HeaderProps) {
   const [checked, setChecked] = useState(false);
   const onRealtimeRunChange = useCallback((checked: boolean) => {
     setChecked(checked);
@@ -51,6 +52,7 @@ function Header({ connected, onConnectClick }: HeaderProps) {
           label="Real time"
         />
       </label>
+      <div>{name}</div>
     </div>
   );
 }
@@ -331,15 +333,19 @@ function App() {
     sleep_ms: 0,
   });
 
+  const [name, setName] = useState("");
+
   const [connected, setConnected] = useState(false);
-  const onConnect = useCallback(() => {
+  const onConnect = useCallback((name: string) => {
     console.log("Connected!");
     setConnected(true);
+    setName(name);
   }, []);
 
   const onDisconnect = useCallback(() => {
     console.log("Disconnected!");
     setConnected(false);
+    setName("");
   }, []);
 
   const onSensorData = useCallback(setSensorData, [setSensorData]);
@@ -359,7 +365,11 @@ function App() {
 
   return (
     <div className="App">
-      <Header onConnectClick={onConnectClickCB} connected={connected} />
+      <Header
+        onConnectClick={onConnectClickCB}
+        connected={connected}
+        name={name}
+      />
       <div className="Container">
         <div className="Container-left">
           <DataSection sensorData={sensorData} />

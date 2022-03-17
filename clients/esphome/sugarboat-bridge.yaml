@@ -78,6 +78,32 @@ sensor:
     lambda: |-
       uint16_t *v16 = (uint16_t *) &x[12];
       return *v16 / 1000.0f;
+  # Air temp.
+  - platform: ble_client
+    ble_client_id: sugarboat_ble_client
+    name: "Sugarboat 1 Air Temperature"
+    service_uuid: 9b7d5c6f-a8ca-4080-9290-d4afb5ac64a3
+    characteristic_uuid: 527d0f9b-db66-48c5-9089-071e1a795b6f
+    accuracy_decimals: 2
+    force_update: true
+    icon: mdi:thermometer
+    unit_of_measurement: °C
+    lambda: |-
+      int16_t *v16 = (int16_t *) &x[8];
+      return *v16 / 100.0f;
+  # MPU6050 temp.
+  - platform: ble_client
+    ble_client_id: sugarboat_ble_client
+    name: "Sugarboat 1 MPU6050 Temperature"
+    service_uuid: 9b7d5c6f-a8ca-4080-9290-d4afb5ac64a3
+    characteristic_uuid: 527d0f9b-db66-48c5-9089-071e1a795b6f
+    accuracy_decimals: 2
+    force_update: true
+    icon: mdi:thermometer
+    unit_of_measurement: °C
+    lambda: |-
+      int16_t *v16 = (int16_t *) &x[14];
+      return *v16 / 100.0f;
 
 # Enable logging
 logger:

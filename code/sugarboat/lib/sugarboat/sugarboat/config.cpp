@@ -30,6 +30,9 @@ size_t Config::Serialize(Stream &stream) const {
   doc["name"] = name_;
   doc["sleep_ms"] = sleep_ms_;
 
+  Serial.println("[config] Serialized:");
+  serializeJsonPretty(doc, Serial);
+
   return serializeJson(doc, stream);
 }
 
@@ -45,7 +48,7 @@ Config Config::Deserialize(Stream &stream) {
     return config;
   }
 
-  Serial.printf("[config] Read from flash: \n");
+  Serial.println("[config] Deserialized:");
   serializeJsonPretty(doc, Serial);
   Serial.println();
 
@@ -57,7 +60,7 @@ Config Config::Deserialize(Stream &stream) {
   }
 
   config.has_imu_offsets_ = doc["has_imu_offsets"];
-  if (config.has_coeffs_) {
+  if (config.has_imu_offsets_) {
     config.imu_offsets.accel_x = doc["imu_offsets"]["accel_x"];
     config.imu_offsets.accel_y = doc["imu_offsets"]["accel_y"];
     config.imu_offsets.accel_z = doc["imu_offsets"]["accel_z"];
@@ -95,6 +98,7 @@ Config Config::ReadFromFlash() {
 }
 
 bool Config::CommitToFlash() {
+  Serial.println("[config] Will commit to flash.");
   if (!InternalFS.begin()) {
     Serial.println("[config] Error initializing the filesystem\n");
     return false;
@@ -119,6 +123,7 @@ bool Config::CommitToFlash() {
   }
 
   file.close();
+
   return true;
 }
 

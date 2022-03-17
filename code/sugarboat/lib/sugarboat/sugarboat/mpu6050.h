@@ -28,6 +28,7 @@ class IMU {
   void WakeUp();
   Offsets Calibrate();
   float GetTilt();
+  float GetTemp();
 
  private:
   MPU6050 mpu_;

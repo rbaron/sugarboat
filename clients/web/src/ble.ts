@@ -1,3 +1,5 @@
+import { ServerResponse } from "http";
+
 const kUARTServiceUUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 // const kUARTTXCharUUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 const kSensorServiceUUID = "9b7d5c6f-a8ca-4080-9290-d4afb5ac64a3";
@@ -38,7 +40,7 @@ export type Config = {
 export type onConfig = (config: Config) => void;
 
 function onConnectRequest(
-  onConnect: Callback,
+  onConnect: (name: string) => void,
   onDisconnect: Callback,
   onSensor: onSensor,
   onConfig: onConfig
@@ -149,7 +151,8 @@ function onConnectRequest(
         });
         return device.gatt!.connect();
       })
-      .then((server) =>
+      .then((server) => {
+        console.log("[ble] Connected! Name:", server.device.name);
         Promise.all([
           server
             .getPrimaryService(kSensorServiceUUID)
@@ -158,9 +161,9 @@ function onConnectRequest(
             .getPrimaryService(kConfigServiceUUID)
             .then(handleConfigService),
         ]).then(() => {
-          onConnect();
-        })
-      );
+          onConnect(server.device.name!);
+        });
+      });
   };
 }
 

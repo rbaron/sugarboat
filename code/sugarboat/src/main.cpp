@@ -75,32 +75,33 @@ void setup() {
   digitalWrite(SGRBT_LED_PIN, LOW);
 }
 
-sugarboat::SensorData sensor_data{0, 0, 0, 0};
+sugarboat::SensorData sensor_data{0, 0, 0, 0, 0};
 void loop() {
   bool is_realtime = config.GetRealtimeRun();
 
   imu.WakeUp();
   sensor_data.tilt_degrees = imu.GetTilt();
+  sensor_data.mpu_temp_celsius = imu.GetTemp();
   imu.Sleep();
 
   float batt_v = 2 * 3.6f * analogRead(SGRBT_BAT_SEN_PIN) / 1024.0f;
 
   sensor_data.batt_volt = batt_v;
   sensor_data.rel_humi = sht30.GetHumi();
-  sensor_data.temp_celcius = sht30.GetTemp();
+  sensor_data.temp_celsius = sht30.GetTemp();
   delay(50);
 
   if (isnan(sensor_data.rel_humi)) {
     sensor_data.rel_humi = 0;
   }
-  if (isnan(sensor_data.temp_celcius)) {
-    sensor_data.temp_celcius = 0;
+  if (isnan(sensor_data.temp_celsius)) {
+    sensor_data.temp_celsius = 0;
   }
 
   ble.InjectSensorData(sensor_data);
 
   // Serial.printf("Angle: %.2f Temp: %.2f, Humi: %.2f Batt: %.2f\n",
-  //               sensor_data.tilt_degrees, sensor_data.temp_celcius,
+  //               sensor_data.tilt_degrees, sensor_data.temp_celsius,
   //               sensor_data.rel_humi, sensor_data.batt_volt);
 
   if (!is_realtime) {

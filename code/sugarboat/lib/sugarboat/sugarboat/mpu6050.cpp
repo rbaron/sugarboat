@@ -1,5 +1,8 @@
 #include "sugarboat/mpu6050.h"
 
+#include <algorithm>
+#include <vector>
+
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps612.h"
 #include "sugarboat/config.h"
@@ -39,7 +42,7 @@ int InitMPULowPower(MPU6050& mpu) {
   // Set SLEEP bit to 0.
   mpu.setSleepEnabled(false);
   //  Set TEMP_DIS bit to 1 => PWR_MGMT_1[3]
-  mpu.setTempSensorEnabled(false);
+  mpu.setTempSensorEnabled(true);
   // Set STBY_XG, STBY_YG, STBY_ZG bits to 1 => PWR_MGMT_2[0, 1, 2]
   mpu.setStandbyXGyroEnabled(true);
   mpu.setStandbyYGyroEnabled(true);
@@ -111,18 +114,20 @@ IMU::Offsets IMU::Calibrate() {
 float IMU::GetTilt() {
   constexpr int loops = 100;
   int16_t raw_x, raw_y, raw_z;
-  float y = 0, z = 0;
   float sum_angle = 0;
   for (int i = 0; i < loops; i++) {
     mpu_.getAcceleration(&raw_x, &raw_y, &raw_z);
-    y += raw_y;
-    z += raw_z;
-    sum_angle += 90 - 180.0f * atan2(y, z) / PI;
-
-    // Assumes wake-up frequency of 40 Hz.
-    delay(1.0f / 40);
+    sum_angle += atan2((float)raw_y, (float)raw_z);
+    delay(10);
   }
-  return sum_angle / loops;
+
+  return 90.0f - 180.0f * (sum_angle / loops) / PI;
+}
+
+float IMU::GetTemp() {
+  int16_t temp_out = mpu_.getTemperature();
+  // From the MPU6050 register map datasheet.
+  return temp_out / 340.0f + 36.53;
 }
 
 }  // namespace sugarboat
