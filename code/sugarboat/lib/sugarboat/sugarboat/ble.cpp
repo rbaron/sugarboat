@@ -84,7 +84,7 @@ bool BLE::Init(Config& config, IMU& imu) {
     return false;
   }
 
-  Bluefruit.setTxPower(0);
+  Bluefruit.setTxPower(8);
 
   Bluefruit.setName(config.GetName().c_str());
   Bluefruit.Periph.setConnectCallback(ConnCallback);
