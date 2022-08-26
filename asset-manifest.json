@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/sugarboat/static/css/main.a9ba5bc8.css",
-    "main.js": "/sugarboat/static/js/main.26565135.js",
+    "main.css": "/sugarboat/static/css/main.175289a9.css",
+    "main.js": "/sugarboat/static/js/main.5b2cb4c6.js",
     "static/media/sugarboat.png": "/sugarboat/static/media/sugarboat.173dfe7569a8747b85cd.png",
     "index.html": "/sugarboat/index.html",
     "static/media/bluetooth.svg": "/sugarboat/static/media/bluetooth.ddda6a400361d11d4f2894fd4bd5ce0e.svg",
-    "main.a9ba5bc8.css.map": "/sugarboat/static/css/main.a9ba5bc8.css.map",
-    "main.26565135.js.map": "/sugarboat/static/js/main.26565135.js.map"
+    "main.175289a9.css.map": "/sugarboat/static/css/main.175289a9.css.map",
+    "main.5b2cb4c6.js.map": "/sugarboat/static/js/main.5b2cb4c6.js.map"
   },
   "entrypoints": [
-    "static/css/main.a9ba5bc8.css",
-    "static/js/main.26565135.js"
+    "static/css/main.175289a9.css",
+    "static/js/main.5b2cb4c6.js"
   ]
 }
