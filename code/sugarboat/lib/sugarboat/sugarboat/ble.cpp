@@ -6,6 +6,7 @@
 #include <string>
 
 #include "sugarboat/sensor_data.h"
+#include "sugarboat/string_stream.h"
 
 namespace sugarboat {
 namespace {
@@ -14,9 +15,12 @@ constexpr int kSensorCharProtocolVersion = 0;
 
 // Time after which we'll switch to a slower advertising interval.
 constexpr uint16_t kFastAdvIntervalSwitchSec = 120;
+constexpr uint16_t kFastAdvIntervalMs = 320;
+constexpr uint16_t kSlowAdvIntervalMs = 3200;
 
 // Time after which we'll switch to a slower connection interval.
 constexpr uint16_t kFastConnIntervalSwitchSec = 20;
+constexpr uint16_t kSlowConnIntervalMs = 375;
 
 struct client_ctx_t {
   uint16_t conn_handle;
@@ -24,37 +28,6 @@ struct client_ctx_t {
 };
 
 client_ctx_t client_ctx[kMaxConnections];
-
-// What was I thinking?
-class StringStream : public Stream {
- public:
-  int available() override {
-    // return ptr - str_.size();
-    return 10;
-  }
-  int read() {
-    // return str_[ptr++];
-    return 'a';
-  }
-  int peek() {
-    // return str_[ptr];
-    return 'a';
-  }
-  void flush() {}
-
-  size_t write(uint8_t byte) override {
-    str_ += byte;
-    return 1;
-  }
-
-  std::string& GetString() {
-    return str_;
-  }
-
- private:
-  std::string str_;
-  size_t ptr = 0;
-};
 
 bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
   // Serial.println("[ble config write] Raw config: ");
@@ -67,7 +40,7 @@ bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
     return false;
   }
 
-  std::string& data = config_stream.GetString();
+  const std::string& data = config_stream.GetString();
   Serial.printf("[ble write to config] Will write: %s\n", data.c_str());
   Serial.println();
   size_t char_written = chr.write(data.c_str(), data.size());
@@ -138,7 +111,7 @@ bool BLE::Init(Config& config, IMU& imu) {
             return;
           }
 
-          UpdateConnInterval(conn_handle, 375);
+          UpdateConnInterval(conn_handle, kSlowConnIntervalMs);
           Serial.printf(
               "[ble] Timer callback for timer_id = %d and conn_handle: %u - "
               "updated conn interval\n",
@@ -218,7 +191,7 @@ bool BLE::StartAdv() {
   // https://devzone.nordicsemi.com/nordic/power/w/opp/2/online-power-profiler-for-ble.
   // @ 320, ~ 220 uA
   // @ 3200, ~ 40 uA
-  Bluefruit.Advertising.setInterval(320, 3200);
+  Bluefruit.Advertising.setInterval(kFastAdvIntervalMs, kSlowAdvIntervalMs);
   Bluefruit.Advertising.setFastTimeout(kFastAdvIntervalSwitchSec);
   Bluefruit.Advertising.start(0);
 
