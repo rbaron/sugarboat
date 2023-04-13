@@ -16,6 +16,8 @@ constexpr char kSensorCharacteristicUUID[] =
 constexpr char kConfigServiceUUID[] = "e94989ee-7b22-4b34-b71d-a33459aea9ae";
 constexpr char kConfigCharacteristicUUID[] =
     "e65785ce-955b-42aa-95a2-b7d96806d3da";
+constexpr char kCommandCharacteristicUUID[] =
+    "97e3d772-0d23-45a6-b52f-36ea304fba5d";
 }  // namespace
 
 class BLE {
@@ -47,10 +49,11 @@ class BLE {
   BLE()
       : cfg_service_(kConfigServiceUUID),
         cfg_char_(kConfigCharacteristicUUID),
+        cmd_char_(kCommandCharacteristicUUID),
         sensor_service_(kSensorServiceUUID),
         sensor_char_(kSensorCharacteristicUUID) {}
 
-  static void CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
+  static void CmdCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
                                    uint8_t* data, uint16_t len);
 
   static void ConnCallback(uint16_t conn_handle);
@@ -63,6 +66,7 @@ class BLE {
   BLEUart bleuart_;
   BLEService cfg_service_;
   BLECharacteristic cfg_char_;
+  BLECharacteristic cmd_char_;
   BLEService sensor_service_;
   BLECharacteristic sensor_char_;
 };

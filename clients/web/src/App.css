@@ -4,6 +4,7 @@
   --grey: #f3f3f3;
   --disabled-grey: #aaa;
   --blue: #2797ff;
+  --red: #d24d57;
   --margin: 8px;
   --padding: 8px;
 }
@@ -38,6 +39,14 @@ button:active {
 }
 
 button:disabled {
+  background-color: var(--disabled-grey);
+}
+
+button.red {
+  background-color: var(--red);
+}
+
+button.red:disabled {
   background-color: var(--disabled-grey);
 }
 

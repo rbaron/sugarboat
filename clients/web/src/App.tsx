@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useEffect, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import { Model } from "./Model";
 import {
@@ -9,9 +9,11 @@ import {
   SensorData,
   Coeffs,
   setRealtimeRun,
+  setIMUOffsets,
   setName,
   setSleepMS,
   reset,
+  IMUOffsets,
 } from "./ble";
 // import Switch from "react-switch";
 import { Quaternion } from "three";
@@ -21,6 +23,22 @@ import logo from "./sugarboat.png";
 // @ts-ignore
 import bluetoothIcon from "./bluetooth.svg";
 import Switch from "./Switch";
+
+function downloadConfig(config: Config) {
+  const date = new Date().toISOString();
+  const filename = `sugarboat-config-${config.name}-${date}.json`;
+  const element = document.createElement("a");
+  const data = {
+    filename,
+    date,
+    config: config,
+  };
+  const json = JSON.stringify(data, null, 2);
+  const file = new Blob([json], { type: "text/json" });
+  element.href = URL.createObjectURL(file);
+  element.download = filename;
+  element.click();
+}
 
 type HeaderProps = {
   connected: boolean;
@@ -104,13 +122,18 @@ type CalibrationSectionProps = {
 };
 function CalibrationSection({
   connected,
-  config: { has_imu_offsets, has_coeffs, coeffs },
+  config: { has_imu_offsets, has_coeffs, coeffs, imu_offsets },
 }: CalibrationSectionProps) {
   const [stateCoeffs, setStateCoeffs] = useState<Coeffs>(coeffs);
+  const [stateIMUOffsets, setStateIMUOffsets] = useState<IMUOffsets>(imu_offsets);
 
   useEffect(() => {
     setStateCoeffs(coeffs);
   }, [coeffs]);
+
+  useEffect(() => {
+    setStateIMUOffsets(imu_offsets);
+  }, [imu_offsets]);
 
   // React.ChangeEventHandler<HTMLInputElement>
   const onCoeffChange = useCallback(
@@ -123,11 +146,20 @@ function CalibrationSection({
     [stateCoeffs]
   );
 
+  const onIMUOffsetsChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const desc = event.target.getAttribute("data-desc");
+      const value =  event.target.value;
+      setStateIMUOffsets({ ...stateIMUOffsets, [desc!]: value });
+    },
+    [stateIMUOffsets]
+  );
+
   const renderCoeffs = useCallback(() => {
     if (!connected) {
       return <p style={{ fontSize: "2rem" }}>🤷‍♂️</p>;
     }
-    if (true || has_coeffs) {
+    if (has_coeffs) {
       return (
         <table>
           <thead>
@@ -181,9 +213,37 @@ function CalibrationSection({
   const renderIMUOffsets = useCallback(() => {
     if (!connected) {
       return <p style={{ fontSize: "2rem" }}>🤷‍♂️</p>;
+    } else if (!has_imu_offsets) {
+      return <p style={{ fontSize: "2rem" }}>👎</p>;
     }
-    return <p style={{ fontSize: "2rem" }}>{has_imu_offsets ? "👌" : "👎"}</p>;
-  }, [connected, has_imu_offsets]);
+    return (
+        <table>
+          <thead>
+            <tr>
+              <th>Desc</th>
+              <th>Coeff</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              ["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"].map((desc) => (
+                <tr key={desc}>
+                  <td>{desc}</td>
+                  <td>
+                    <input
+                      type="text"
+                      value={stateIMUOffsets[desc as keyof IMUOffsets]}
+                      onChange={onIMUOffsetsChange}
+                      data-desc={desc}
+                    />
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+    );
+  }, [connected, has_imu_offsets, stateIMUOffsets, onIMUOffsetsChange]);
 
   return (
     <div>
@@ -192,7 +252,11 @@ function CalibrationSection({
         <ValueBox name="Accel / Gyro">
           <p className="DataBox-content"></p>
           {renderIMUOffsets()}
-          <button disabled={!connected} onClick={calibrateIMU}>
+          <button disabled={!connected} onClick={() => setIMUOffsets(stateIMUOffsets).then(() => alert('Done, but will take effect only after reset'))}>
+            Upload IMU Offsets
+          </button>
+          <br/>
+          <button className="red" disabled={!connected} onClick={() => window.confirm("Calibrate? It will override the IMU offsets.") ? calibrateIMU() : null}>
             Calibrate
           </button>
         </ValueBox>
@@ -308,6 +372,35 @@ function ConfigSection({
   );
 }
 
+function BackupSection({ connected, config, setConfig }: { connected: boolean, config: Config, setConfig: (config: Config) => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const readFile = useCallback((file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const json = JSON.parse(e.target?.result as string);
+      console.log('Got config: ', json.config);
+      setConfig(json.config);
+    };
+    reader.readAsText(file);
+  }, [setConfig]);
+  return (
+    <div>
+      <h1>Backup/Restore</h1>
+      <div className="ValueBoxes-container">
+        <ValueBox name="Backup">
+          <button disabled={!connected} onClick={() => downloadConfig(config)}>Backup Config</button>
+        </ValueBox>
+        <ValueBox name="Restore">
+          <input type="file" ref={fileInputRef} disabled={!connected} accept=".json" onChange={evt => {console.log(evt)}} />
+          <button disabled={!connected} onClick={() => {readFile(fileInputRef.current?.files?.[0])}}>Load</button>
+        </ValueBox>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const orientation = useState<Quaternion>(new Quaternion());
 
@@ -329,17 +422,25 @@ function App() {
       a1: 0,
       a0: 0,
     },
+    imu_offsets: {
+      accel_x: 0,
+      accel_y: 0,
+      accel_z: 0,
+      gyro_x: 0,
+      gyro_y: 0,
+      gyro_z: 0,
+    },
     name: "",
     sleep_ms: 0,
   });
 
-  const [name, setName] = useState("");
+  // const [name, setName] = useState("");
 
   const [connected, setConnected] = useState(false);
   const onConnect = useCallback((name: string) => {
     console.log("Connected!");
     setConnected(true);
-    setName(name);
+    // setName(name);
   }, []);
 
   const onDisconnect = useCallback(() => {
@@ -368,7 +469,7 @@ function App() {
       <Header
         onConnectClick={onConnectClickCB}
         connected={connected}
-        name={name}
+        name={""}
       />
       <div className="Container">
         <div className="Container-left">
@@ -382,6 +483,7 @@ function App() {
             connected={connected}
           />
           <CalibrationSection connected={connected} config={config} />
+          <BackupSection connected={connected} config={config} setConfig={setConfig}/>
         </div>
         <div className="Container-right">
           <Model orientation={orientation[0]} />

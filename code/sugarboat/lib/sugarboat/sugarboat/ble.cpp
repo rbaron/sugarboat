@@ -1,6 +1,7 @@
 #include "sugarboat/ble.h"
 
 #include <nrf_nvic.h>
+#include <rtos.h>
 
 #include <string>
 
@@ -11,6 +12,20 @@ namespace {
 constexpr int kMaxConnections = 2;
 constexpr int kSensorCharProtocolVersion = 0;
 
+// Time after which we'll switch to a slower advertising interval.
+constexpr uint16_t kFastAdvIntervalSwitchSec = 120;
+
+// Time after which we'll switch to a slower connection interval.
+constexpr uint16_t kFastConnIntervalSwitchSec = 20;
+
+struct client_ctx_t {
+  uint16_t conn_handle;
+  TimerHandle_t change_conn_interval_timer;
+};
+
+client_ctx_t client_ctx[kMaxConnections];
+
+// What was I thinking?
 class StringStream : public Stream {
  public:
   int available() override {
@@ -42,8 +57,9 @@ class StringStream : public Stream {
 };
 
 bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
-  Serial.println("[ble config write] Raw config: ");
-  cfg.Serialize(Serial);
+  // Serial.println("[ble config write] Raw config: ");
+  // cfg.Serialize(Serial);
+  // Serial.println();
 
   StringStream config_stream;
   if (cfg.Serialize(config_stream) <= 0) {
@@ -53,6 +69,7 @@ bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
 
   std::string& data = config_stream.GetString();
   Serial.printf("[ble write to config] Will write: %s\n", data.c_str());
+  Serial.println();
   size_t char_written = chr.write(data.c_str(), data.size());
   if (char_written < data.size()) {
     Serial.printf("[ble] Wrote %d bytes to config char and expected %d\n",
@@ -60,15 +77,41 @@ bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
     return false;
   }
 
-  Serial.printf("[ble] Wrote cfg to ble char: %s\n", data.c_str());
+  // Serial.printf("[ble] Wrote cfg to ble char: %s\n", data.c_str());
+  // Serial.println();
+  Serial.printf("[ble] Wrote cfg to ble char\n");
 
-  // Maybe notify clients.
-  for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++) {
-    if (Bluefruit.connected(conn_handler) && chr.notifyEnabled(conn_handler)) {
-      chr.notify(conn_handler, data.c_str(), data.size());
-    }
-  }
+  // This is broken. Despite us negotiating a larget MTU of 247, this
+  // notification still chops up the data into 20 byte chunks. I think this is
+  // because the BLE stack is still using the default MTU of 23.
+  // // Maybe notify clients.
+  // for (int conn_handler = 0; conn_handler < kMaxConnections; conn_handler++)
+  // {
+  //   if (Bluefruit.connected(conn_handler) && chr.notifyEnabled(conn_handler))
+  //   {
+  //     chr.notify(conn_handler, data.c_str(), data.size());
+  //   }
+  // }
   return true;
+}
+
+// Default: [20, 30] ms (actually maybe depend on runtime negotiation).
+// Negotiated to 15ms: ~ 480 uA.
+// 375 ms: 40 uA.
+void UpdateConnInterval(uint16_t conn_handle, uint16_t interval_ms) {
+  BLEConnection* conn = Bluefruit.Connection(conn_handle);
+  uint16_t conn_int = conn->getConnectionInterval();
+  Serial.printf(
+      "[ble] Connection interval: %d ms. Requesting change to %d ms\n",
+      MS125TO100(conn_int), interval_ms);
+
+  // Request the connecting central to change the connection.
+  // Note that this also dramatically increases the time it takes to stablish a
+  // connection. This is surprising because I assumed this callback would only
+  // be called _after_ the connection is fully established.
+  bool res = conn->requestConnectionParameter(MS100TO125(interval_ms));
+  Serial.printf("[ble] Requested connection interval change - success: %d\n",
+                res);
 }
 
 }  // namespace
@@ -76,6 +119,32 @@ bool WriteToConfigChar(const Config& cfg, BLECharacteristic& chr) {
 bool BLE::Init(Config& config, IMU& imu) {
   config_ = &config;
   imu_ = &imu;
+
+  // Initialize client contexts.
+  for (int i = 0; i < kMaxConnections; i++) {
+    client_ctx[i].conn_handle = BLE_CONN_HANDLE_INVALID;
+    client_ctx[i].change_conn_interval_timer = xTimerCreate(
+        "change_conn_interval",
+        pdMS_TO_TICKS(kFastConnIntervalSwitchSec * 1000),
+        /*auto_reload=*/pdFALSE, (void*)i, [](TimerHandle_t timer) {
+          // Race?
+          int timer_id = (int)(pvTimerGetTimerID(timer));
+          uint16_t conn_handle = client_ctx[timer_id].conn_handle;
+          if (conn_handle == BLE_CONN_HANDLE_INVALID) {
+            Serial.printf(
+                "[ble] Timer callback for timer_id = %d got invalid "
+                "conn_handle: %d\n",
+                timer_id, conn_handle);
+            return;
+          }
+
+          UpdateConnInterval(conn_handle, 375);
+          Serial.printf(
+              "[ble] Timer callback for timer_id = %d and conn_handle: %u - "
+              "updated conn interval\n",
+              timer_id, conn_handle);
+        });
+  }
 
   Bluefruit.autoConnLed(false);
 
@@ -91,25 +160,27 @@ bool BLE::Init(Config& config, IMU& imu) {
   Bluefruit.Periph.setDisconnectCallback(DisconnCallback);
   Bluefruit.Periph.setConnInterval(800, 1600);
 
-  // if (bleuart_.begin()) {
-  //   Serial.println("[ble] Error initializing BLE UART service");
-  //   return false;
-  // }
-
   // Init config service & characteristic.
   if (cfg_service_.begin()) {
     Serial.println("[ble] Error initializing BLE config service");
     return false;
   }
-  cfg_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY | CHR_PROPS_WRITE);
+  cfg_char_.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY);
   cfg_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
-  cfg_char_.setWriteCallback(CfgCharWriteCallback);
   cfg_char_.setMaxLen(512);
   if (cfg_char_.begin()) {
     Serial.println("[ble] Error initializing BLE config characteristic");
     return false;
   }
   WriteToConfigChar(*config_, cfg_char_);
+
+  cmd_char_.setProperties(CHR_PROPS_WRITE);
+  cmd_char_.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+  cmd_char_.setWriteCallback(CmdCharWriteCallback);
+  if (cmd_char_.begin()) {
+    Serial.println("[ble] Error initializing BLE config characteristic");
+    return false;
+  }
 
   // Init sensor service & characteristic.
   if (sensor_service_.begin()) {
@@ -145,9 +216,10 @@ bool BLE::StartAdv() {
   // Advertisement interval in units of 625 us. For estimating impact in battery
   // life, use
   // https://devzone.nordicsemi.com/nordic/power/w/opp/2/online-power-profiler-for-ble.
-  // Bluefruit.Advertising.setInterval(32, 244);
-  Bluefruit.Advertising.setInterval(32, 3200);
-  Bluefruit.Advertising.setFastTimeout(1);
+  // @ 320, ~ 220 uA
+  // @ 3200, ~ 40 uA
+  Bluefruit.Advertising.setInterval(320, 3200);
+  Bluefruit.Advertising.setFastTimeout(kFastAdvIntervalSwitchSec);
   Bluefruit.Advertising.start(0);
 
   return true;
@@ -208,7 +280,7 @@ bool BLE::InjectSensorData(const SensorData& sensor_data) {
   return true;
 }
 
-void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
+void BLE::CmdCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
                                uint8_t* data, uint16_t len) {
   BLE& ble = BLE::GetInstance();
   if (ble.config_ == nullptr) {
@@ -236,7 +308,8 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
       Serial.printf("[ble] Will set polynomial coefficients\n");
       Coeffs coeffs;
       // Nasty error prone memcpy. It expects 3 32-bit IEEE-754 in
-      // little-endian.
+      // little-endian. Coeffs is a struct of 3 floats, but is it aligned? Does
+      // it have padding?
       memcpy(&coeffs, data + 1, sizeof(Coeffs));
       Serial.printf("[ble] Coeffs: %f, %f, %f\n", coeffs.a2, coeffs.a1,
                     coeffs.a0);
@@ -275,7 +348,28 @@ void BLE::CfgCharWriteCallback(uint16_t conn_hdl, BLECharacteristic* chr,
       return;
     }
     case 0x06: {
+      Serial.println("[ble] Will reset device");
       sd_nvic_SystemReset();
+      return;
+    }
+    case 0x07: {
+      Serial.println("[ble] Will set IMU offsets");
+      // Expects 6 16-bit signed integers in little-endian.
+      if (len != 1 + 6 * 2) {
+        Serial.printf("[ble] Invalid data length for IMU offsets: %d\n", len);
+        return;
+      }
+      IMU::Offsets offsets;
+      // I'm sorry again.
+      memcpy(&offsets, data + 1, sizeof(IMU::Offsets));
+      Serial.printf("[ble] Got IMU offsets: %d, %d, %d, %d, %d, %d\n",
+                    offsets.accel_x, offsets.accel_y, offsets.accel_z,
+                    offsets.gyro_x, offsets.gyro_y, offsets.gyro_z);
+      suspendLoop();
+      ble.config_->SetIMUOffsets(offsets);
+      ble.config_->CommitToFlash();
+      WriteToConfigChar(*ble.config_, ble.cfg_char_);
+      resumeLoop();
       return;
     }
     default:
@@ -291,26 +385,32 @@ void BLE::ConnCallback(uint16_t conn_handle) {
     Bluefruit.Advertising.start(0);
   }
 
-  BLEConnection* conn = Bluefruit.Connection(conn_handle);
-  uint16_t conn_int = conn->getConnectionInterval();
-  Serial.printf("[ble] Connection interval: %d\n", conn_int);
+  // Request MTU exchange.
+  bool mtu_exchange_res =
+      Bluefruit.Connection(conn_handle)->requestMtuExchange(247);
+  Serial.printf("[ble] MTU exchange request result: %d\n", mtu_exchange_res);
 
-  // Request the connecting central to change the connection.
-  // Note that this also dramatically increases the time it takes to stablish a
-  // connection. This is surprising because I assumed this callback would only
-  // be called _after_ the connection is fully stablished.
-  conn->requestConnectionParameter(300);
+  client_ctx[conn_handle].conn_handle = conn_handle;
+  xTimerStart(client_ctx[conn_handle].change_conn_interval_timer, 0);
 
-  Serial.printf("[ble] Connection callback. #clients: %d\n", ble.n_conns_);
+  Serial.printf("[ble] Connection callback. Conn handle: %u, #clients: %d\n",
+                conn_handle, ble.n_conns_);
 }
 
 void BLE::DisconnCallback(uint16_t conn_handle, uint8_t reason) {
   BLE& ble = BLE::GetInstance();
+  // Race?
   --ble.n_conns_;
-  Serial.printf("[ble] Disconnect callback. #clients: %d\n", ble.n_conns_);
+  Serial.printf("[ble] Disconnect callback. Conn handle: %u, #clients: %d\n",
+                conn_handle, ble.n_conns_);
   ble.config_->SetRealtimeRun(false);
 
+  xTimerStop(client_ctx[conn_handle].change_conn_interval_timer, 0);
+  client_ctx[conn_handle].conn_handle = BLE_CONN_HANDLE_INVALID;
+
   // Keep or resume advertising.
+  // Stop first so we re-kick the fast advertising.
+  Bluefruit.Advertising.stop();
   Bluefruit.Advertising.start(0);
 }
 

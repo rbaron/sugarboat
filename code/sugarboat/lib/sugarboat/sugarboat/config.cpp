@@ -30,8 +30,9 @@ size_t Config::Serialize(Stream &stream) const {
   doc["name"] = name_;
   doc["sleep_ms"] = sleep_ms_;
 
-  Serial.println("[config] Serialized:");
-  serializeJsonPretty(doc, Serial);
+  // Serial.println("[config] Serialized:");
+  // serializeJsonPretty(doc, Serial);
+  // Serial.println();
 
   return serializeJson(doc, stream);
 }
