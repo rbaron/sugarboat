@@ -1,3 +1,6 @@
+#ifndef _SUGARBOAT_STRING_STREAM_H_
+#define _SUGARBOAT_STRING_STREAM_H_
+
 #include <Arduino.h>
 
 #include <string>
@@ -35,3 +38,5 @@ class StringStream : public Stream {
 };
 
 }  // namespace sugarboat
+
+#endif  // _SUGARBOAT_STRING_STREAM_H_
