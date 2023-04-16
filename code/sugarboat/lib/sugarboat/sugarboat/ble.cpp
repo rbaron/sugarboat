@@ -19,7 +19,7 @@ constexpr uint16_t kFastAdvIntervalMs = 320;
 constexpr uint16_t kSlowAdvIntervalMs = 3200;
 
 // Time after which we'll switch to a slower connection interval.
-constexpr uint16_t kFastConnIntervalSwitchSec = 20;
+constexpr uint16_t kFastConnIntervalSwitchSec = 60;
 constexpr uint16_t kSlowConnIntervalMs = 375;
 
 struct client_ctx_t {
